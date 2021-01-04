@@ -1,0 +1,117 @@
+swagger: "2.0"
+info:
+  description: Backend API for Amarium
+  version: "1.0.0"
+  title: Amarium REST API
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+
+basePath: "/api"
+
+# Paths supported by the application
+paths:
+  /user/{user_name}/closet/{closet_name}:
+    get:
+      operationId: api.closet.get_closet
+      tags:
+        - "Closet"
+      summary: Get a user's closet by name
+      description: Get a user's closet by name
+      parameters:
+        - name: user_name
+          in: path
+          description: The user's username
+          type: string
+          required: True
+        - name: closet_name
+          in: path
+          description: Name of the closet
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully retrieved closet
+          schema:
+            properties:
+              name:
+                type: string
+              entries:
+                type: array
+                items:
+                  properties:
+                    filename:
+                      type: string
+                    object_key:
+                      type: string
+                    category:
+                      type: string
+        404:
+          description: Could not find the closet
+  /user/{user_name}/closet/:
+    post:
+      operationId: api.closet.create_closet
+      tags:
+        - "Closet"
+      summary: Create a closet for a user
+      description: Create a closet for a user
+      parameters:
+        - name: user_name
+          in: path
+          description: The user's username
+          type: string
+          required: True
+        - name: closet
+          in: body
+          description: Closet to create
+          required: True
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: The name of the closet
+      responses:
+        201:
+          description: Successfully created closet
+  /user/{user_name}/closet/{closet_name}/entry/:
+    post:
+      operationId: api.closet_entry.create_closet_entry
+      tags:
+        - "Closet Entry"
+      summary: Create a new closet entry
+      description: Create a new closet entry
+      parameters:
+        - name: user_name
+          in: path
+          description: The user's username
+          type: string
+          required: True
+        - name: closet_name
+          in: path
+          description: Name of the closet
+          type: string
+          required: True
+        - name: closet_entry
+          in: body
+          description: Closet entry to add to closet
+          required: True
+          schema:
+            type: object
+            properties:
+              filename:
+                type: string
+                description: File name for the image
+              object_key:
+                type: string
+                description: S3 bucket identifier
+              category:
+                type: string
+                description: Clothing category
+      responses:
+        201:
+          description: Successfully created closet entry
+
+        
+
