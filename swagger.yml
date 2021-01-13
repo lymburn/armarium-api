@@ -127,6 +127,9 @@ paths:
           schema:
             type: object
             properties:
+              base64_encoded_image:
+                type: string
+                description: base64 encoded string of byte array of an image
               filename:
                 type: string
                 description: File name for the image
