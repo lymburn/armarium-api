@@ -1,26 +1,35 @@
-from flask import make_response
+from flask import jsonify
 import database.db as db
-from model import closet_model, closet_entry_model
+from data_access.closet_dao import closet_dao
+from model.closet_model import Closet
 
-def create_closet(user_name, closet):
+def create_closet(username, closet):
     """
     This function corresponds to a POST request to /api/user/{user_name}/closet/
     with a list of all closets being returned
 
-    :param user_name:      username of the user to create a closet for
-    :param closet:         the closet to create
-    :return:               201 on success, 409 if closet exists
+    :param username:      username of the user to create a closet for
+    :param closet:        the closet to create
+    :return:              201 on success, 409 if closet exists
     """
+    try:
+        connections = db.get_db()
 
-    # TODO: Error handling
-    connections = db.get_db()
+        closet_name = closet.get('name')
 
-    closet_name = closet.get("name")
+        closet = get_closet(username, closet_name)
 
-    # TODO: Check if closet already exists
-    db.create_table(connections, user_name, closet_name)
+        if closet is not None:
+            return "Closet with name for this user already exists", 409
+        else:      
+            closet_model = Closet(closet_name)
 
-    return make_response("Successfully created closet", 201)
+            closet_dao.create_closet(username, closet_model)
+
+            return "Successfully created closet", 201
+
+    except Exception as error:
+        return jsonify(error = str(error)), 500
 
 def get_closets(user_name):
     """
@@ -31,7 +40,7 @@ def get_closets(user_name):
     :return:               list of user's closets
     """
 
-def get_closet(user_name, closet_name):
+def get_closet(username, closet_name):
     """
     This function corresponds to a GET request for /api/user/{user_name}/closet/{closet_name}
     with the specified closet being returned
@@ -41,9 +50,13 @@ def get_closet(user_name, closet_name):
     :return:               (200) the user's closet matching with the name, (404) closet not found
     """
 
-    connections = db.get_db()
-
-    # TODO: Cleanup to be more pleasant
-    closet_entries = db.select_entries_from_closet(connections, user_name, closet_name)
-
-    return make_response("Sample", 200)
+    try:
+        closet = closet_dao.get_by_name(username, closet_name)
+        
+        if closet is not None:
+            return jsonify(id = closet.closet_id,
+                           name = closet.closet_name)
+        else:
+            return 'Closet Not Found', 404
+    except Exception as error:
+        return jsonify(error = str(error)), 500

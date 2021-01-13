@@ -12,7 +12,51 @@ basePath: "/api"
 
 # Paths supported by the application
 paths:
-  /user/{user_name}/closet/{closet_name}:
+  /user/:
+    post:
+      operationId: api.user.create_user
+      tags:
+        - "User"
+      summary: Register a user
+      description: Register a user
+      parameters:
+        - name: user
+          in: body
+          description: User profile to create
+          required: True
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: The user's username
+              password:
+                type: string
+                description: The user's password
+      responses:
+        201:
+          description: Successfully registered user
+        409:
+          description: User already exists
+  /user/{username}/:
+    get:
+      operationId: api.user.get_user_by_username
+      tags:
+        - "User"
+      summary: Get a user by username
+      description: Get a user by usernmae
+      parameters:
+        - name: username
+          in: path
+          description: The user's username
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully retrieved user
+        404:
+          description: Could not find the user
+  /user/{username}/closet/{closet_name}:
     get:
       operationId: api.closet.get_closet
       tags:
@@ -20,7 +64,7 @@ paths:
       summary: Get a user's closet by name
       description: Get a user's closet by name
       parameters:
-        - name: user_name
+        - name: username
           in: path
           description: The user's username
           type: string
@@ -49,7 +93,7 @@ paths:
                       type: string
         404:
           description: Could not find the closet
-  /user/{user_name}/closet/:
+  /user/{username}/closet/:
     post:
       operationId: api.closet.create_closet
       tags:
@@ -57,7 +101,7 @@ paths:
       summary: Create a closet for a user
       description: Create a closet for a user
       parameters:
-        - name: user_name
+        - name: username
           in: path
           description: The user's username
           type: string
@@ -75,7 +119,9 @@ paths:
       responses:
         201:
           description: Successfully created closet
-  /user/{user_name}/closet/{closet_name}/entry/:
+        409:
+          description: Closet with name already exist for user
+  /closet/{closet_id}/closet-entry/:
     post:
       operationId: api.closet_entry.create_closet_entry
       tags:
@@ -83,15 +129,10 @@ paths:
       summary: Create a new closet entry
       description: Create a new closet entry
       parameters:
-        - name: user_name
+        - name: closet_id
           in: path
-          description: The user's username
-          type: string
-          required: True
-        - name: closet_name
-          in: path
-          description: Name of the closet
-          type: string
+          description: The closet entry to create an entry in
+          type: integer
           required: True
         - name: closet_entry
           in: body
@@ -103,6 +144,9 @@ paths:
               filename:
                 type: string
                 description: File name for the image
+              bucket_name:
+                type: string
+                description: S3 bucket name
               object_key:
                 type: string
                 description: S3 bucket identifier
@@ -112,6 +156,8 @@ paths:
       responses:
         201:
           description: Successfully created closet entry
+        409:
+          description: Closet entry with object key already exists
 
         
 

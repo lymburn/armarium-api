@@ -1,5 +1,5 @@
 import connexion
-from database.db import connect_to_db, close_db
+import database.db as db
 from flask import g
 import os
 
@@ -14,13 +14,20 @@ app.add_api('swagger.yml')
 
 @app.app.before_request
 def before_request():
-    connect_to_db('database.db')
+    db.connect_to_db('database.db')
 
 @app.app.teardown_request
 def teardown_request(exception):
-    close_db()
+    db.close_db()
 
 if __name__ == '__main__':
+    with app.app.app_context():
+        db.connect_to_db('database.db')
+        connection = db.get_db()
+        db.create_tables(connection)
+
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)
+
+
 
 

@@ -1,25 +1,31 @@
-from flask import make_response
+from flask import jsonify
 import database.db as db
 from model.closet_entry_model import ClosetEntry
+from data_access.closet_entry_dao import closet_entry_dao
 
-def create_closet_entry(user_name, closet_name, closet_entry):
+def create_closet_entry(closet_id, closet_entry):
     """
-    This function corresponds to a POST request to /api/user/{user_name}/closet/{closet_name}/entry
+    This function corresponds to a POST request to /api/closet/{closet_id}/closet-entry
     with a list of all closets being returned
 
-    :param user_name:      username of the user's closet to add entries to
-    :param closet_name:    the name of the closet to add entries to
-    :return:               201 on success
+    :param closet_id:       id of the closet to add entry to
+    :param closet_entry:    the name of the closet to add entries to
+    :return:                201 on success, 409 if entry with object key already exists
     """
 
-    connections = db.get_db()
+    try:
+        filename = closet_entry.get("filename")
+        bucket_name = closet_entry.get("bucket_name")
+        object_key = closet_entry.get("object_key")
+        category = closet_entry.get("category")
 
-    filename = closet_entry.get("filename")
-    object_key = closet_entry.get("object_key")
-    category = closet_entry.get("category")
+        closet_entry_model = ClosetEntry(filename, bucket_name, object_key, category)
 
-    entry = ClosetEntry(filename, object_key, category)
+        closet_entry_dao.create_closet_entry(closet_id, closet_entry_model)
 
-    db.add_entry(connections, user_name, closet_name, entry)
+        return "Successfully created closet entry", 201
 
-    return make_response("Successfully created closet entry", 201)
+    except Exception as error:
+        return jsonify(error = str(error)), 500
+
+
