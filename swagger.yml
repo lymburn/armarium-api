@@ -77,20 +77,6 @@ paths:
       responses:
         200:
           description: Successfully retrieved closet
-          schema:
-            properties:
-              name:
-                type: string
-              entries:
-                type: array
-                items:
-                  properties:
-                    filename:
-                      type: string
-                    object_key:
-                      type: string
-                    category:
-                      type: string
         404:
           description: Could not find the closet
   /user/{username}/closet/:
@@ -158,6 +144,21 @@ paths:
           description: Successfully created closet entry
         409:
           description: Closet entry with object key already exists
+    get:
+      operationId: api.closet_entry.get_closet_entries_by_closet
+      tags:
+        - "Closet Entry"
+      summary: Get a closet's entries
+      description: Get a closet's entries
+      parameters:
+        - name: closet_id
+          in: path
+          description: The closet's id to retrieve entries from
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully retrieved closet entries
 
-        
+          
 

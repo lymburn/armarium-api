@@ -2,23 +2,26 @@ from model.closet_entry_model import ClosetEntry
 import database.db as db
 
 class ClosetEntryDAO:
-    # def get_by_name(self, username: str, closet_name: str):
-    #     try:
-    #         connections = db.get_db()
-    #         condition_columns = ['ClosetName']
-    #         condition_values = [closet_name]
+    def get_all_entries_from_closet(self, closet_id: int):
+        try:
+            connections = db.get_db()
 
-    #         closets = db.select_entry_from_table(connections, 'Closets', condition_columns, condition_values)
+            entries = db.select_all_files_from_closet(connections, closet_id)
 
-    #         if len(closets) > 0:
-    #             closet = closets[0]
-    #             closet_model = Closet(closet['ClosetID'], closet['ClosetName'])
+            closet_entry_models = []
 
-    #             return closet_model
-    #         else:
-    #             return None
-    #     except Exception as error:
-    #         raise error
+            for entry in entries:
+                filename = entry['Filename']
+                bucket_name = entry['BucketName']
+                object_key = entry['ObjectKey']
+                category = entry['Category']
+
+                closet_entry_model = ClosetEntry(filename, bucket_name, object_key, category)
+                closet_entry_models.append(closet_entry_model)
+
+            return closet_entry_models
+        except Exception as error:
+            raise error
 
     def create_closet_entry(self, closet_id: int, closet_entry_model: ClosetEntry):
         try:

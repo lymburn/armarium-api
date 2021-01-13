@@ -124,13 +124,24 @@ def select_file_given_user_closet_and_filename(connections, username: str, close
     execute_sql(connections, sql_cmd)
     return connections.db_cursor.fetchall()
 
+def select_all_files_from_closet(connections, closet_id: int):
+    sql_cmd = f'SELECT Files.* FROM Files WHERE Files.ClosetID={closet_id}'
+
+    cursor = connections.cursor()
+    execute_sql(cursor, sql_cmd)
+    rv = cursor.fetchall()
+    return (rv[0] if rv else None) if None else rv
+
 def select_all_files_given_user_and_closet(connections, username: str, closet_id: int):
     sql_cmd = '''SELECT Files.* FROM Files INNER JOIN Closets 
                     ON Files.ClosetID=Closets.ClosetID 
                     WHERE Closets.Username='''
     sql_cmd += sql_query_str_format(username) + ' AND Closets.ClosetID=' + sql_query_str_format(closet_id) + ';'
-    execute_sql(connections, sql_cmd)
-    return connections.db_cursor.fetchall()
+    
+    cursor = connections.cursor()
+    execute_sql(cursor, sql_cmd)
+    rv = cursor.fetchall()
+    return (rv[0] if rv else None) if None else rv
 
 def select_all_files_given_user_closet_and_category(connections, username: str, closet_id: int, category: str):
     sql_cmd = '''SELECT Files.* FROM Files INNER JOIN Closets 
