@@ -16,7 +16,7 @@ class ClosetEntryDAO:
                 bucket_name = entry['BucketName']
                 object_key = entry['ObjectKey']
                 category = entry['Category']
-                base64_encoded_image = get_image_by_filename(filename)
+                base64_encoded_image = self.get_image_by_filename(filename)
 
                 closet_entry_model = ClosetEntry(base64_encoded_image ,filename, bucket_name, object_key, category)
                 closet_entry_models.append(closet_entry_model)
@@ -25,7 +25,7 @@ class ClosetEntryDAO:
         except Exception as error:
             raise error
 
-    def get_image_by_filename(filename: str):
+    def get_image_by_filename(self, filename: str):
         # TODO: Do S3 stuff
         return ""
 
@@ -43,7 +43,7 @@ class ClosetEntryDAO:
 
             db.insert_entry(connections, 'Files', columns, values)
 
-            upload_image(closet_entry_model.base64_encoded_image)
+            self.upload_image(closet_entry_model.base64_encoded_image)
 
         except Exception as error:
             raise error

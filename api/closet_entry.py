@@ -46,7 +46,8 @@ def get_closet_entries_by_closet(closet_id):
         json_entries = []
 
         for entry in closet_entries:
-            json_entry = {"filename": entry.filename,
+            json_entry = {"base64_encoded_image": entry.base64_encoded_image,
+                          "filename": entry.filename,
                           "bucket_name": entry.bucket_name,
                           "object_key": entry.object_key,
                           "category": entry.category}
