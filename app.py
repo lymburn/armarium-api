@@ -26,7 +26,7 @@ if __name__ == '__main__':
         connection = db.get_db()
         db.create_tables(connection)
 
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 8080)), debug=True)
 
 
 
