@@ -220,20 +220,6 @@ def get_object(connections, bucket_name: str, object_key: str):
     return get_response['Body'].read()
 
 
-def create_credentials_and_config():
-    # AWS config / permissions files set-up
-    # To be called by server prior to creating StorageConnections instance + other actions
-    # Assume that "/" is root directory of svr
-    os.mkdir("/.aws")
-    config = open("/.aws/config", "w")
-    config.write('[default]\nregion = us-east-2')
-    config.close()
-
-    cred = open("/.aws/credentials", "w")
-    cred.write('[default]\naws_access_key_id = AKIAZF4H7KLZEIEZLVG5\naws_secret_access_key = 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')
-    cred.close()
-
-
 def create_delete_objects_delete_dict(object_keys: List[str]):
     # Given list of object keys, build dict of expected format for client.delete_objects
     objects = []

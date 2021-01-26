@@ -12,8 +12,8 @@ import base64
 import os
 import io
 from PIL import Image
-from db_orm_mapping import Users, Closets, Files, RecommendedOutfits
-from storage_connections import StorageConnections
+from database.db_orm_mapping import Users, Closets, Files, RecommendedOutfits
+from storage.storage_connections import StorageConnections
 
 
 def add_user(connections: StorageConnections, username: str, password_hash: str) -> None:
