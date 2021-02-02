@@ -1,168 +1,176 @@
-from flask import g
 from model.closet_entry_model import ClosetEntry
+import networkx as nx
+from networkx.readwrite import json_graph
+from collections import defaultdict
 import typing
-from typing import List, Set, Dict, Tuple, Optional
-import sqlite3
-from sqlite3 import Error
-import boto3
-from botocore.exceptions import ClientError
+from typing import Any, List, Set, Dict, Tuple, Optional, BinaryIO, DefaultDict
 import networkx as nx
 from networkx.readwrite import json_graph
 import json
 import uuid
+import base64
 import os
 import io
+from database.db_orm_mapping import sqla, Users, Closets, Files, RecommendedOutfits
+
 
 # Database access functions
-def connect_to_db(database_path):
-    db = getattr(g, '_database', None)
-    if db is None:
-        try:
-            db = g._database = sqlite3.connect(database_path)
-            print("Connection to SQLite DB successful")
-        except Error as e:
-            print(f"The error '{e}' occurred")
-    
-    db.row_factory = sqlite3.Row
-    return db
+def add_user(username: str, password_hash: str) -> None:
+    usr = Users(username, password_hash)
+    add_persist(usr)
 
-def get_db():
-    db = getattr(g, '_database', None)
-    return db
 
-def close_db():
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
-        print("Connection to SQLite DB closed")
+def add_closet(closet_name: str, username: str) -> None:
+    closet = Closets(closet_name, username)
+    add_persist(closet)
 
-def create_tables(connections):
-    # Create tables: Users, Closets, Files
-    sql_cmd = '''CREATE TABLE IF NOT EXISTS Users (
-                    Username text NOT NULL,
-                    PasswordHash text NOT NULL,
-                    PRIMARY KEY (Username));'''
-    execute_sql(connections, sql_cmd)
 
-    sql_cmd = '''CREATE TABLE IF NOT EXISTS Closets (
-                    ClosetID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Username text NOT NULL,
-                    ClosetName text NOT NULL,
-                    FOREIGN KEY (Username) REFERENCES Users(Username));'''
-    execute_sql(connections, sql_cmd)
+def add_file(object_key: str, filename: str, bucket_name: str, category: str, closet_id: int) -> None:
+    file = Files(object_key, filename, bucket_name, category, closet_id)
+    add_persist(file)
 
-    sql_cmd = '''CREATE TABLE IF NOT EXISTS Files (
-                    Filename text NOT NULL,
-                    BucketName text NOT NULL,
-                    ObjectKey text NOT NULL,
-                    Category text NOT NULL,
-                    ClosetID INTEGER NOT NULL,
-                    PRIMARY KEY (ObjectKey),
-                    FOREIGN KEY (ClosetID) REFERENCES Closets(ClosetID));'''
-    execute_sql(connections, sql_cmd)
-    
-    print(f"Created tables: Users, Closets, Files")
 
-def insert_entry(connections, table_name: str, columns, items):
-    # Format for items: [ItemForColA, ItemB, ItemC] following order of columns in schema
-    cols = ''
-    values = ''
+def add_recommended_outfit(outfit: List[str], closet_id: int) -> None:
+    outfit_str = ','.join(outfit)
+    rec_outfit = RecommendedOutfits(outfit_str, closet_id)
+    add_persist(rec_outfit)
 
-    for col in columns:
-        cols += col + ', '
 
-    for val in items:
-        values += sql_query_str_format(val) + ', '
-    
-    values = values[:len(values)-2]    
-    cols = cols[:len(cols)-2]  
+def add_persist(obj: Any) -> None:
+    # Helper func
+    sqla.session.add(obj)
+    sqla.session.commit()
 
-    sql_cmd = 'INSERT INTO ' + table_name + '(' + cols + ')' + ' VALUES (' + values + ');'
-    execute_sql(connections.cursor(), sql_cmd)
-    connections.commit()
 
-def delete_entry(connections, table_name: str, condition_column: str, condition_value):
-    # Condition_value can be any type as specified by table schema
-    # Currently checking for int for different SQL query format
-    sql_cmd = 'DELETE FROM ' + table_name + ' WHERE ' + condition_column + '=' + sql_query_str_format(condition_value) + ';'
-    execute_sql(connections.cursor(), sql_cmd)
-    connections.commit()
+def delete_user(username: str) -> None:
+    # TODO: Should cascade delete all closets assoc w user + files assoc w closets
+    usr = sqla.session.query(Users).filter(
+        Users.username == username).all()
+    delete_persist(usr[0])
 
-def update_entry(connections, table_name: str, update_columns: List[str], update_items, condition_column: str, condition_value):
-    # Format for items: [ItemForColA, ItemB, ItemC] following order of columns in schema
-    # Assumed len(columns) == len(items)
-    sql_cmd = 'UPDATE ' + table_name + ' SET '
-    temp = ''
-    for col, it in zip(update_columns, update_items):
-        temp += col + '=' + sql_query_str_format(it) + ', '
-    
-    where_condition = ' WHERE ' + condition_column + '=' + sql_query_str_format(condition_value) + ';'
-    sql_cmd += temp[:len(temp)-2] + where_condition
-    execute_sql(connections.cursor, sql_cmd)
-    connections.commit()
 
-def select_entry_from_table(connections, table_name: str, condition_columns: List[str], condition_values):
-    # Can also be used to check if something exists
-    sql_cmd = 'SELECT * FROM ' + table_name + ' WHERE '
-    temp = ''
-    for col, val in zip(condition_columns, condition_values):
-        print(sql_query_str_format(val))
-        temp += col + '=' + sql_query_str_format(val) + ' AND '
-    sql_cmd += temp[:len(temp)-5] + ';'
-    print(sql_cmd)
-    cursor = connections.cursor()
-    execute_sql(cursor, sql_cmd)
-    rv = cursor.fetchall()
-    return (rv[0] if rv else None) if None else rv
+def delete_closet(closet_id: int) -> None:
+    # TODO: Should cascade delete all files in closet
+    closet = closet = sqla.session.query(Closets).filter(
+        Closets.closet_id == closet_id).all()
+    delete_persist(closet[0])
 
-def select_file_given_user_closet_and_filename(connections, username: str, closet_id: int, filename: str):
-    sql_cmd = '''SELECT Files.* FROM Files INNER JOIN Closets 
-                    ON Files.ClosetID=Closets.ClosetID 
-                    WHERE Closets.Username='''
-    sql_cmd += sql_query_str_format(username) + ' AND Closets.ClosetID=' + sql_query_str_format(closet_id)
-    sql_cmd += ' AND Files.Filename=' + sql_query_str_format(filename) + ';'
-    execute_sql(connections, sql_cmd)
-    return connections.db_cursor.fetchall()
 
-def select_all_files_from_closet(connections, closet_id: int):
-    sql_cmd = f'SELECT Files.* FROM Files WHERE Files.ClosetID={closet_id}'
+def delete_file(object_key: str) -> None:
+    file = sqla.session.query(Files).filter(
+        Files.object_key == object_key).all()
+    delete_persist(file[0])
 
-    cursor = connections.cursor()
-    execute_sql(cursor, sql_cmd)
-    rv = cursor.fetchall()
-    return (rv[0] if rv else None) if None else rv
 
-def select_all_files_given_user_and_closet(connections, username: str, closet_id: int):
-    sql_cmd = '''SELECT Files.* FROM Files INNER JOIN Closets 
-                    ON Files.ClosetID=Closets.ClosetID 
-                    WHERE Closets.Username='''
-    sql_cmd += sql_query_str_format(username) + ' AND Closets.ClosetID=' + sql_query_str_format(closet_id) + ';'
-    
-    cursor = connections.cursor()
-    execute_sql(cursor, sql_cmd)
-    rv = cursor.fetchall()
-    return (rv[0] if rv else None) if None else rv
+def delete_all_files_in_closet(closet_id: int) -> None:
+    files = sqla.session.query(Files).filter(
+        Files.closet_id == closet_id).all()
+    for f in files:
+        delete_persist(f)
 
-def select_all_files_given_user_closet_and_category(connections, username: str, closet_id: int, category: str):
-    sql_cmd = '''SELECT Files.* FROM Files INNER JOIN Closets 
-                    ON Files.ClosetID=Closets.ClosetID 
-                    WHERE Closets.Username='''
-    sql_cmd += sql_query_str_format(username) + ' AND Closets.ClosetID=' + sql_query_str_format(closet_id)
-    sql_cmd += ' AND Files.Category=' + sql_query_str_format(category) + ';'
-    execute_sql(connections, sql_cmd)
-    return connections.db_cursor.fetchall()
 
-def sql_query_str_format(value):
-    # Helper function, detect if value is type # or Str and format SQL query substring accordingly
-    sql_str = ''
-    if isinstance(value, int) or isinstance(value, float):
-        sql_str = str(value)
-    else:
-        sql_str = '\'' + value + '\''
-    return sql_str
+def delete_all_files_in_closet_category(closet_id: int, category: str) -> None:
+    files = sqla.session.query(Files).filter(
+        Files.closet_id == closet_id, Files.category == category).all()
+    for f in files:
+        delete_persist(f)
 
-def execute_sql(cursor, sql_cmd: str):
-    try:
-        cursor.execute(sql_cmd)
-    except Error as e:
-        print(e)
+
+def delete_persist(obj: Any) -> None:
+    # Helper func
+    sqla.session.delete(obj)
+    sqla.session.commit()
+
+
+def query_user_info(username: str) -> Dict:
+    usr = sqla.session.query(Users).filter(
+        Users.username == username).all()
+    res = {}
+    if usr:
+        res = {'username': usr[0].username,
+               'password_hash': usr[0].password_hash}
+    return res
+
+
+def query_closet_info(closet_id: int) -> Dict:
+    closet = sqla.session.query(Closets).filter(
+        Closets.closet_id == closet_id).all()
+    res = {}
+    if closet:
+        res = {'closet_id': closet[0].closet_id, 'closet_name': closet[0].closet_name,
+               'username': closet[0].username}
+    return res
+
+
+def query_closet_id(username: str, closet_name: str) -> List:
+    # Returns list since a user may have multiple closets with the same name
+    closets = sqla.session.query(Closets).filter(
+        Closets.username == username, Closets.closet_name == closet_name).all()
+    res = []
+    if closets:
+        res = [{'closet_id': c.closet_id, 'closet_name': c.closet_name,
+                'username': c.username} for c in closets]
+    return res
+
+
+def query_closets_of_user(username: str) -> List:
+    closets = sqla.session.query(Closets).filter(
+        Closets.username == username).all()
+    res = []
+    if closets:
+        res = [{'closet_id': c.closet_id, 'closet_name': c.closet_name}
+               for c in closets]
+    return res
+
+
+def query_all_files_from_closet(closet_id: int) -> List:
+    files = sqla.session.query(Files).filter(
+        Files.closet_id == closet_id).all()
+    res = []
+    if files:
+        res = [{'filename': f.filename, 'object_key': f.object_key, 'bucket_name': f.bucket_name,
+                'category': f.category, 'closet_id': f.closet_id} for f in files]
+
+    return res
+
+
+def query_all_files_from_closet_grouped_by_category(closet_id: int) -> DefaultDict:
+    files = sqla.session.query(Files).filter(
+        Files.closet_id == closet_id).all()
+    res = defaultdict(list)
+    if files:
+        for f in files:
+            res[f.category].append(
+                {'filename': f.filename, 'object_key': f.object_key, 'bucket_name': f.bucket_name})
+    return res
+
+
+def query_all_files_from_closet_category(closet_id: int, category: str) -> List:
+    files = sqla.session.query(Files).filter(
+        Files.closet_id == closet_id, Files.category == category).all()
+    res = []
+    if files:
+        res = [{'filename': f.filename, 'object_key': f.object_key,
+                'bucket_name': f.bucket_name} for f in files]
+    return res
+
+
+def query_file_info(object_key: str) -> Dict:
+    file = sqla.session.query(Files).filter(
+        Files.object_key == object_key).all()
+    res = {}
+    if file:
+        res = {'filename': file[0].filename, 'bucket_name': file[0].bucket_name,
+               'category': file[0].category, 'closet_id': file[0].closet_id}
+    return res
+
+
+def query_file_key(closet_id: int, filename: str) -> List:
+    # Returns list since a closet may have multiple files with the same name
+    files = sqla.session.query(Files).filter(
+        Files.filename == filename, Files.closet_id == closet_id).all()
+    res = []
+    if files:
+        res = [{'object_key': f.object_key, 'bucket_name': f.bucket_name,
+                'category': f.category} for f in files]
+    return res

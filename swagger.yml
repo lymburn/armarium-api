@@ -44,7 +44,7 @@ paths:
       tags:
         - "User"
       summary: Get a user by username
-      description: Get a user by usernmae
+      description: Get a user by username
       parameters:
         - name: username
           in: path
@@ -129,7 +129,7 @@ paths:
             properties:
               base64_encoded_image:
                 type: string
-                description: base64 encoded string of byte array of an image
+                description: Base64 encoded string of byte array of an image
               filename:
                 type: string
                 description: File name for the image

@@ -4,15 +4,11 @@ import database.db as db
 class ClosetDAO:
     def get_by_name(self, username: str, closet_name: str):
         try:
-            connections = db.get_db()
-            condition_columns = ['ClosetName']
-            condition_values = [closet_name]
-
-            closets = db.select_entry_from_table(connections, 'Closets', condition_columns, condition_values)
+            closets = db.query_closet_id(username, closet_name)
 
             if len(closets) > 0:
                 closet = closets[0]
-                closet_model = Closet(closet['ClosetID'], closet['ClosetName'])
+                closet_model = Closet(closet['closet_id'], closet['closet_name'])
 
                 return closet_model
             else:
@@ -20,17 +16,12 @@ class ClosetDAO:
         except Exception as error:
             raise error
 
-    def create_closet(self, username: str, closet_model: Closet):
+    def create_closet(self, username: str, closet_name: str):
         try:
-            connections = db.get_db()
-
-            closet_name = closet_model.closet_name
-            columns = ['Username', 'ClosetName']
-            values = [username, closet_name]
-
-            db.insert_entry(connections, 'Closets', columns, values)
-
+            closet_id = db.add_closet(closet_name, username)
         except Exception as error:
             raise error
+        else:
+            return closet_id
 
 closet_dao = ClosetDAO()

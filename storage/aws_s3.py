@@ -1,8 +1,6 @@
 # Armarium API S3 Functions
 import typing
 from typing import Any, List, Set, Dict, Tuple, Optional, BinaryIO
-import sqlite3
-from sqlite3 import Error
 import boto3
 from botocore.exceptions import ClientError
 import networkx as nx
@@ -13,6 +11,10 @@ import base64
 import os
 import io
 from PIL import Image
+from storage.s3_connection import s3
+
+
+# TODO: Clean up - some functions don't need try-except b/w exceptions should've been caught before that pt
 
 
 def create_object_key(filename: str) -> str:
@@ -23,7 +25,7 @@ def create_object_key(filename: str) -> str:
     return obj_key
 
 
-def create_bucket_name(connections) -> str:
+def create_bucket_name() -> str:
     # Use uuid library uuid4() to generate 128-bit seq and take first 12 char
     # NOTE: Using V4 not V1 to ensure higher security, since V1 is generated using MAC addr and timer
     # NOTE: Using uuid b/c it is more random and secure than the random library
@@ -32,35 +34,33 @@ def create_bucket_name(connections) -> str:
         uuid_str = str(uuid.uuid4())[:12]
         bucket_name = 'arm-bucket-' + uuid_str  # 'arm' for Armarium
 
-        if check_bucket_exists(connections, bucket_name) == False:
+        if check_bucket_exists(bucket_name) == False:
             break
 
     return bucket_name
 
 
-def check_bucket_exists(connections, bucket_name: str) -> bool:
+def check_bucket_exists(bucket_name: str) -> bool:
     try:
-        connections.s3.meta.client.head_bucket(Bucket=bucket_name)
-        # print(f"Bucket '{bucket_name}' exists.")
+        s3.meta.client.head_bucket(Bucket=bucket_name)
         exists = True
     except ClientError:
-        # print(f"ClientError: Bucket '{bucket_name}' doesn't exist or you don't have access to it.")
         exists = False
     return exists
 
 
-def create_bucket(connections) -> str:
-    bucket_name = create_bucket_name(connections)
+def create_bucket() -> str:
+    bucket_name = create_bucket_name()
     try:
-        bucket = connections.s3.create_bucket(
+        bucket = s3.create_bucket(
             Bucket=bucket_name,
             CreateBucketConfiguration={
-                'LocationConstraint': connections.s3_region
+                'LocationConstraint': 'us-east-2'
             }
         )
         bucket.wait_until_exists()
-        print(
-            f"Created bucket '{bucket.name}' in region={connections.s3.meta.client.meta.region_name}")
+        # print(
+        #     f"DEBUG: Created bucket '{bucket.name}' in region={s3.meta.client.meta.region_name}")
     except ClientError as e:
         print(
             f"{e.response['Error']['Code']}: Couldn't create bucket named {bucket_name}.")
@@ -68,22 +68,23 @@ def create_bucket(connections) -> str:
         return bucket_name
 
 
-def get_buckets(connections) -> Any:
-    # Returns list of S3 Bucket objects, where name can be accessed by bucket.name
+def get_buckets() -> List:
+    # Returns list of S3 Bucket names, extracted from the returned S3 Bucket objects
     try:
-        buckets = list(connections.s3.buckets.all())
-        print(f"Got buckets: {buckets}.")
+        buckets = list(s3.buckets.all())
+        # print(f"DEBUG: Got buckets: {buckets}.")
+        bucket_names = [b.name for b in buckets]
     except ClientError as e:
         print(
             f"ClientError, could not get buckets. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
     else:
-        return buckets
+        return bucket_names
 
 
-def delete_bucket(connections, bucket_name: str) -> None:
+def delete_bucket(bucket_name: str) -> None:
     # Deletes bucket. Bucket must be empty
     try:
-        bucket = connections.s3.Bucket(bucket_name)
+        bucket = s3.Bucket(bucket_name)
         bucket.delete()
         bucket.wait_until_not_exists()
         print(f"Bucket '{bucket.name}'' successfully deleted.")
@@ -92,21 +93,21 @@ def delete_bucket(connections, bucket_name: str) -> None:
             f"ClientError, could not delete bucket. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
 
 
-def empty_and_delete_bucket(connections, bucket_name: str) -> None:
+def empty_and_delete_bucket(bucket_name: str) -> None:
     # Checks for objects in bucket, deletes all before deleting bucket
     try:
         # TODO: Get list of object in bucket, delete iteratively, return list of deleted items +/ errors
-        delete_bucket(connections, bucket_name)
+        delete_bucket(bucket_name)
     except ClientError as e:
         print(
             f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
     pass
 
 
-def list_objects_in_bucket(connections, bucket_name: str) -> Tuple[bool, Any]:
+def list_objects_in_bucket(bucket_name: str) -> Tuple[bool, Any]:
     # Returns up to 1000 items. IsTruncated = true if there are more keys available to return
     try:
-        response = connections.s3.meta.client.list_objects_v2(
+        response = s3.meta.client.list_objects_v2(
             Bucket=bucket_name)
     except ClientError as e:
         print(
@@ -118,17 +119,17 @@ def list_objects_in_bucket(connections, bucket_name: str) -> Tuple[bool, Any]:
         return response['IsTruncated'], contents
 
 
-def upload_data(connections, bytes_buffer: BinaryIO, bucket_name: str, object_key: str) -> None:
+def upload_data(bytes_buffer: BinaryIO, bucket_name: str, object_key: str) -> None:
     # Given data, upload to given bucket
     # Will overwrite existing object if there is already an obj w same obj_key in bucket
     # NOTE: Assume obj_key is either fetched from DB or generated by calling create_object_key()
     # NOTE: bytes_buffer should be a BytesIO or BufferReader object. Can call getvalue() or read() for bytes
     # NOTE: Stores bytes in bytes_buffer as is. Does not further encode / decode
     try:
-        connections.s3.meta.client.upload_fileobj(
+        s3.meta.client.upload_fileobj(
             bytes_buffer, bucket_name, object_key)
         # NOTE: May not be necessary to wait
-        waiter = connections.s3.meta.client.get_waiter('object_exists')
+        waiter = s3.meta.client.get_waiter('object_exists')
         waiter.wait(
             Bucket=bucket_name,
             Key=object_key,
@@ -142,21 +143,34 @@ def upload_data(connections, bytes_buffer: BinaryIO, bucket_name: str, object_ke
             f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
 
 
-def upload_graph(connections, nx_graph, bucket_name: str, graph_name: str) -> None:
-    # Translates NetworkX graph obj into JSON, then into BytesIO obj to be saved to S3
+def upload_image(b64_enc_img: str, bucket_name: str, object_key: str) -> None:
+    # TODO: DEBUG - bytes or str? Swagger API passes in string, format bytes but still recog as python str...
     try:
-        graph_js = json_graph.node_link_data(nx_graph)
-        bytes_data = io.BytesIO(bytes(json.dumps(graph_js).encode('utf-8')))
-        upload_data(connections, bytes_data, bucket_name, graph_name)
+        # NOTE: Need to decode + re-encode to get a usable byte buffer b/c Swagger passes in str
+        # (even if it's an encoded byte string, Python recognizes it as str and not bytes)
+        decoded_img = base64.b64decode(b64_enc_img)
+        bytes_data = io.BytesIO(base64.b64encode(decoded_img))
+        upload_data(bytes_data, bucket_name, object_key)
     except ClientError as e:
         print(
             f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
 
 
-def get_graph(connections, bucket_name: str, object_key: str) -> Any:
+def upload_graph(nx_graph, bucket_name: str, graph_name: str) -> None:
+    # Translates NetworkX graph obj into JSON, then into BytesIO obj to be saved to S3
+    try:
+        graph_js = json_graph.node_link_data(nx_graph)
+        bytes_data = io.BytesIO(bytes(json.dumps(graph_js).encode('utf-8')))
+        upload_data(bytes_data, bucket_name, graph_name)
+    except ClientError as e:
+        print(
+            f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
+
+
+def get_graph(bucket_name: str, object_key: str) -> Any:
     # Translate JSON back into NetworkX graph object before returning
     try:
-        object_data = get_object(connections, bucket_name, object_key)
+        object_data = get_object(bucket_name, object_key)
         decoded_to_json = json.loads(object_data.decode('utf-8'))
     except ClientError as e:
         print(
@@ -165,12 +179,12 @@ def get_graph(connections, bucket_name: str, object_key: str) -> Any:
         return json_graph.node_link_graph(decoded_to_json)
 
 
-def get_image(connections, bucket_name: str, object_key: str) -> Image:
+def get_image(bucket_name: str, object_key: str) -> Image:
     # Decodes S3 returned data, wrap in BytesIO obj, then convert to PIL Image obj
     # NOTE: Assumes returned data be base64 encoded byte stream, b/c that is what is assumed to be uploaded
     # NOTE: Since this returns PIL Image obj, there is no need to call "base64_to_image()" from ML code
     try:
-        img_data = get_object(connections, bucket_name, object_key)
+        img_data = get_object(bucket_name, object_key)
         img_data = base64.b64decode(img_data)
         img_bytes = io.BytesIO(img_data)
         img = Image.open(img_bytes)
@@ -182,10 +196,21 @@ def get_image(connections, bucket_name: str, object_key: str) -> Image:
         return img
 
 
-def delete_objects(connections, bucket_name: str, object_keys: List[str]) -> Tuple[Any, Any]:
+def get_image_base64_byte_str(bucket_name: str, object_key: str) -> bytes:
+    try:
+        img_data = get_object(bucket_name, object_key)
+    except ClientError as e:
+        print(
+            f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
+    else:
+        return img_data
+    pass
+
+
+def delete_objects(bucket_name: str, object_keys: List[str]) -> Tuple[Any, Any]:
     delete_dict = create_delete_objects_delete_dict(object_keys)
     try:
-        response = connections.s3.meta.client.delete_objects(
+        response = s3.meta.client.delete_objects(
             Bucket=bucket_name, Delete=delete_dict)
         errors = response['Errors']
         if errors:
@@ -200,10 +225,10 @@ def delete_objects(connections, bucket_name: str, object_keys: List[str]) -> Tup
         return response['Deleted'], errors
 
 
-def delete_object(connections, bucket_name: str, object_key: str) -> None:
+def delete_object(bucket_name: str, object_key: str) -> None:
     # Wrapper for AWS S3 client.delete_object
     try:
-        response = connections.s3.meta.client.delete_object(
+        response = s3.meta.client.delete_object(
             Bucket=bucket_name, Key=object_key)
     except ClientError as e:
         print(
@@ -211,16 +236,21 @@ def delete_object(connections, bucket_name: str, object_key: str) -> None:
 
 
 # AWS S3 Helper Functions
-def get_object(connections, bucket_name: str, object_key: str):
+def get_object(bucket_name: str, object_key: str) -> bytes:
     # Wrapper for S3 client.get_object, returns all bytes from Body of response
     # TODO: Consider switching to download_fileobj(BytesIO) if this is slow
-    get_response = connections.s3.meta.client.get_object(
-        Bucket=bucket_name, Key=object_key)
-    # default read all if no amount specified
-    return get_response['Body'].read()
+    try:
+        get_response = s3.meta.client.get_object(
+            Bucket=bucket_name, Key=object_key)
+    except ClientError as e:
+        print(
+            f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
+    else:
+        # default read all if no amount specified
+        return get_response['Body'].read()
 
 
-def create_delete_objects_delete_dict(object_keys: List[str]):
+def create_delete_objects_delete_dict(object_keys: List[str]) -> Dict:
     # Given list of object keys, build dict of expected format for client.delete_objects
     objects = []
     for key in object_keys:

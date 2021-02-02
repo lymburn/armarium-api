@@ -1,5 +1,4 @@
 from flask import jsonify
-import database.db as db
 from data_access.closet_dao import closet_dao
 from model.closet_model import Closet
 
@@ -13,19 +12,13 @@ def create_closet(username, closet):
     :return:              201 on success, 409 if closet exists
     """
     try:
-        connections = db.get_db()
-
         closet_name = closet.get('name')
-
-        closet = get_closet(username, closet_name)
+        closet = closet_dao.get_by_name(username, closet_name)
 
         if closet is not None:
             return "Closet with name for this user already exists", 409
         else:      
-            closet_model = Closet(closet_name)
-
-            closet_dao.create_closet(username, closet_model)
-
+            closet_dao.create_closet(username, closet_name)
             return "Successfully created closet", 201
 
     except Exception as error:
@@ -39,6 +32,7 @@ def get_closets(user_name):
     :param user_name:      username of the user to retrieve from
     :return:               list of user's closets
     """
+    return ''
 
 def get_closet(username, closet_name):
     """
