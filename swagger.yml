@@ -133,12 +133,6 @@ paths:
               filename:
                 type: string
                 description: File name for the image
-              bucket_name:
-                type: string
-                description: S3 bucket name
-              object_key:
-                type: string
-                description: S3 bucket identifier
               category:
                 type: string
                 description: Clothing category

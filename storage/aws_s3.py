@@ -14,14 +14,15 @@ from PIL import Image
 from storage.s3_connection import s3
 
 
-# TODO: Clean up - some functions don't need try-except b/w exceptions should've been caught before that pt
+# TODO: Instead of printing errors, should raise?
 
 
 def create_object_key(filename: str) -> str:
     # Generate 6-digit alphanumeric key + append to filename
     # This should allow us to search for filename as a substring of object_key in Files, if needed
     uuid_str = str(uuid.uuid4())[:8]
-    obj_key = uuid_str + '/' + filename
+    obj_key = uuid_str + '-' + filename
+    print(f"DEBUG: Object key, {obj_key}")
     return obj_key
 
 
@@ -46,7 +47,8 @@ def check_bucket_exists(bucket_name: str) -> bool:
         exists = True
     except ClientError:
         exists = False
-    return exists
+    finally:
+        return exists
 
 
 def create_bucket() -> str:
@@ -94,9 +96,15 @@ def delete_bucket(bucket_name: str) -> None:
 
 
 def empty_and_delete_bucket(bucket_name: str) -> None:
-    # Checks for objects in bucket, deletes all before deleting bucket
     try:
-        # TODO: Get list of object in bucket, delete iteratively, return list of deleted items +/ errors
+        truncated, objects = list_objects_in_bucket(bucket_name)
+        while truncated:
+            truncated, objs = list_objects_in_bucket(bucket_name)
+            objects.extend(objs)
+
+        object_keys = [obj['Key'] for obj in objects]
+        delete_objects(bucket_name, object_keys)
+
         delete_bucket(bucket_name)
     except ClientError as e:
         print(
@@ -144,7 +152,6 @@ def upload_data(bytes_buffer: BinaryIO, bucket_name: str, object_key: str) -> No
 
 
 def upload_image(b64_enc_img: str, bucket_name: str, object_key: str) -> None:
-    # TODO: DEBUG - bytes or str? Swagger API passes in string, format bytes but still recog as python str...
     try:
         # NOTE: Need to decode + re-encode to get a usable byte buffer b/c Swagger passes in str
         # (even if it's an encoded byte string, Python recognizes it as str and not bytes)
@@ -196,9 +203,10 @@ def get_image(bucket_name: str, object_key: str) -> Image:
         return img
 
 
-def get_image_base64_byte_str(bucket_name: str, object_key: str) -> bytes:
+def get_image_data(bucket_name: str, object_key: str) -> str:
     try:
-        img_data = get_object(bucket_name, object_key)
+        # Get b64 encoded bytes, returned in informal str representation (eg. "b'b64data'")
+        img_data = str(get_object(bucket_name, object_key))
     except ClientError as e:
         print(
             f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
@@ -212,8 +220,9 @@ def delete_objects(bucket_name: str, object_keys: List[str]) -> Tuple[Any, Any]:
     try:
         response = s3.meta.client.delete_objects(
             Bucket=bucket_name, Delete=delete_dict)
-        errors = response['Errors']
-        if errors:
+        errors = []
+        if 'Errors' in response:
+            errors = response['Errors']
             for e in errors:
                 print(
                     f"Error for key, {e['Key']}. {e['Code']}: {e['Message']}")

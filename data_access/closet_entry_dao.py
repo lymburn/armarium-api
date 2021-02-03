@@ -26,15 +26,18 @@ class ClosetEntryDAO:
             raise error
 
     def get_image_by_object_key(self, bucket_name: str, object_key: str):
-        img_byte_str = aws_s3.get_image_base64_byte_str(bucket_name, object_key)
-        return img_byte_str
+        img_data = aws_s3.get_image_data(bucket_name, object_key)
+        return img_data
 
     def create_closet_entry(self, closet_id: int, closet_entry_model: ClosetEntry):
         try:
             filename = closet_entry_model.filename
-            bucket_name = closet_entry_model.bucket_name
-            object_key = closet_entry_model.object_key
             category = closet_entry_model.category
+
+            # Pick bucket + generate key
+            buckets = aws_s3.get_buckets()
+            bucket_name = buckets[0]
+            object_key = aws_s3.create_object_key(filename)
 
             db.add_file(object_key, filename, bucket_name, category, closet_id)
             self.upload_image(bucket_name, object_key, closet_entry_model.base64_encoded_image)

@@ -16,6 +16,14 @@ def before_first_request():
     aws_s3.create_bucket()
 
 
+def clean_up():
+    with app.app.app_context():
+        sqla.drop_all()
+    
+    buckets = aws_s3.get_buckets()
+    for b in buckets:
+        aws_s3.empty_and_delete_bucket(b)
+
 if __name__ == '__main__':
     # Database set up
     app.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -28,7 +36,4 @@ if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)
     finally:
-        # AWS Clean-up
-        buckets = aws_s3.get_buckets()
-        for b in buckets:
-            aws_s3.delete_bucket(b)
+        clean_up()
