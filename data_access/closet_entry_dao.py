@@ -1,22 +1,22 @@
 from model.closet_entry_model import ClosetEntry
 import database.db as db
+import storage.aws_s3 as aws_s3
 import base64
+import io
 
 class ClosetEntryDAO:
     def get_all_entries_from_closet(self, closet_id: int):
         try:
-            connections = db.get_db()
-
-            entries = db.select_all_files_from_closet(connections, closet_id)
+            entries = db.query_all_files_from_closet(closet_id)
 
             closet_entry_models = []
 
             for entry in entries:
-                filename = entry['Filename']
-                bucket_name = entry['BucketName']
-                object_key = entry['ObjectKey']
-                category = entry['Category']
-                base64_encoded_image = self.get_image_by_filename(filename)
+                filename = entry['filename']
+                bucket_name = entry['bucket_name']
+                object_key = entry['object_key']
+                category = entry['category']
+                base64_encoded_image = self.get_image_by_object_key(bucket_name, object_key)
 
                 closet_entry_model = ClosetEntry(base64_encoded_image ,filename, bucket_name, object_key, category)
                 closet_entry_models.append(closet_entry_model)
@@ -25,35 +25,28 @@ class ClosetEntryDAO:
         except Exception as error:
             raise error
 
-    def get_image_by_filename(self, filename: str):
-        # TODO: Do S3 stuff
-        return ""
+    def get_image_by_object_key(self, bucket_name: str, object_key: str):
+        img_data = aws_s3.get_image_data(bucket_name, object_key)
+        return img_data
 
     def create_closet_entry(self, closet_id: int, closet_entry_model: ClosetEntry):
         try:
-            connections = db.get_db()
-
             filename = closet_entry_model.filename
-            bucket_name = closet_entry_model.bucket_name
-            object_key = closet_entry_model.object_key
             category = closet_entry_model.category
 
-            columns = ['Filename', 'BucketName', 'ObjectKey', 'Category', 'ClosetId']
-            values = [filename, bucket_name, object_key, category, closet_id]
+            # Pick bucket + generate key
+            buckets = aws_s3.get_buckets()
+            bucket_name = buckets[0]
+            object_key = aws_s3.create_object_key(filename)
 
-            db.insert_entry(connections, 'Files', columns, values)
-
-            self.upload_image(closet_entry_model.base64_encoded_image)
-
+            db.add_file(object_key, filename, bucket_name, category, closet_id)
+            self.upload_image(bucket_name, object_key, closet_entry_model.base64_encoded_image)
         except Exception as error:
             raise error
 
-    def upload_image(self, base64_encoded_image: str):
+    def upload_image(self, bucket_name: str, object_key: str, base64_encoded_image: str):
         try:
-            image_bytes = base64.b64decode(base64_encoded_image)
-
-            # TODO: Do stuff with s3
-
+            aws_s3.upload_image(base64_encoded_image, bucket_name, object_key)
         except Exception as error:
             raise error
 

@@ -1,6 +1,5 @@
 from flask import jsonify, make_response
 import json as json
-import database.db as db
 from model.closet_entry_model import ClosetEntry
 from data_access.closet_entry_dao import closet_entry_dao
 
@@ -15,14 +14,12 @@ def create_closet_entry(closet_id, closet_entry):
     """
 
     try:
-        # TODO: Create bucket and object key in server
+        # Get file data, bucket + key info will be added in DAO
         base64_encoded_image = closet_entry.get("base64_encoded_image")
         filename = closet_entry.get("filename")
-        bucket_name = closet_entry.get("bucket_name")
-        object_key = closet_entry.get("object_key")
         category = closet_entry.get("category")
 
-        closet_entry_model = ClosetEntry(base64_encoded_image, filename, bucket_name, object_key, category)
+        closet_entry_model = ClosetEntry(base64_encoded_image, filename, '', '', category)
 
         closet_entry_dao.create_closet_entry(closet_id, closet_entry_model)
 
