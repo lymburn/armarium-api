@@ -2,6 +2,7 @@ from flask import jsonify
 import database.db as db
 from data_access.closet_dao import closet_dao
 from model.closet_model import Closet
+from ml.outfit_generator import get_top_outfits
 
 def create_closet(username, closet):
     """
@@ -58,5 +59,17 @@ def get_closet(username, closet_name):
                            name = closet.closet_name)
         else:
             return 'Closet Not Found', 404
+    except Exception as error:
+        return jsonify(error = str(error)), 500
+
+# TODO: make outfit_images an input instead of hardcode
+def get_best_outfit():
+    # run get_outfit_score along with the algorithm
+    try:
+        # TODO: add algorithm, just returning one score for testing purposes
+        # complete path to the images
+        # outfit_images = ['test-outfit/top.jpg','test-outfit/bottom.jpg','test-outfit/shoes.jpg','test-outfit/bag.jpg','test-outfit/accessory.jpg']
+        score_returned = get_top_outfits(['test-outfit/top.jpg'],['test-outfit/bottom.jpg'],['test-outfit/shoes.jpg'],['test-outfit/bag.jpg'],['test-outfit/accessory.jpg'])
+        return jsonify(score = score_returned)
     except Exception as error:
         return jsonify(error = str(error)), 500
