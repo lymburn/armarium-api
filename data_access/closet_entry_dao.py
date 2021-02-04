@@ -50,4 +50,6 @@ class ClosetEntryDAO:
         except Exception as error:
             raise error
 
+    # TODO: def add_closet_entry_to_graph(base64_encoded_image):
+
 closet_entry_dao = ClosetEntryDAO()

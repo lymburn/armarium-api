@@ -23,6 +23,8 @@ def create_closet_entry(closet_id, closet_entry):
 
         closet_entry_dao.create_closet_entry(closet_id, closet_entry_model)
 
+        # TODO: Call closet_entry_dao add_closet_entry_to_graph(base64_encoded_image)
+
         return "Successfully created closet entry", 201
 
     except Exception as error:

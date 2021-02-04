@@ -56,7 +56,12 @@ def get_closet(username, closet_name):
     except Exception as error:
         return jsonify(error = str(error)), 500
 
+# TODO: def recommend_outfits(...):
+'''
+
+'''
 # TODO: make outfit_images an input instead of hardcode
+# TODO: move get_best_outfit to closet_dao
 def get_best_outfit():
     # run get_outfit_score along with the algorithm
     try:

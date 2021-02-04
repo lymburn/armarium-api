@@ -23,5 +23,11 @@ class ClosetDAO:
             raise error
         else:
             return closet_id
+    
+    # TODO: def get_best_outfit():
+    '''
+    Call algorithms from ML
+    (maybe call to S3 to get img data to return back if ness)
+    '''
 
 closet_dao = ClosetDAO()
