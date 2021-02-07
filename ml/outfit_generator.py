@@ -1,10 +1,5 @@
 """
 Final chosen outfit generation algorithm
-
-- Graph structure:
-    - Edge weights = negative of score output from ML model
-    - To offset biased effects of pairwise scores, we combined some categories before building the sequentially-connected, directed graph
-    - Graph is currently organized as follows: (top+bottom) --> shoes --> bag --> accessory
 - Path search:
     - Bellman ford
     - Optimization on default NetworkX Bellman Ford:
@@ -16,58 +11,26 @@ import itertools
 import time
 from ml.outfit_grader import get_outfit_score
 
-# path to mean images
-MEAN_TOP = "ml/upper.png"
-MEAN_BOTTOM = "ml/bottom.png"
-MEAN_SHOES = "ml/shoe.png"
-MEAN_BAG = "ml/bag.png"
-MEAN_ACCESSORY = "ml/accessory.png"
-
-# Graph generation helper functions
 def generate_all_combos(ls):
     # ls = [[], [], ...]
     # https://stackoverflow.com/questions/798854/all-combinations-of-a-list-of-lists
     output = list(itertools.product(*ls))
     return output
 
-def add_edges_neg_weight(it_graph, relations):
-    # given {(categA, categB):[outfit], ...}, add_edge(categA, categB, weight = score(outfit))
-    for k, v in relations.items():
-        it_graph.add_edge(k[0], k[1], weight=-1*get_outfit_score(v))
-    return it_graph
-
-def generate_graph_edges(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs):
-    # Requireed outfit seq = tbsga
-    tb_combos = generate_all_combos([top_imgs, bottom_imgs])
-    tbs_combos = generate_all_combos([tb_combos, shoes_imgs]) # Format: [((tb), s),]
-    tbs_relations = {tbs:list((tbs[0][0], tbs[0][1], tbs[1]) + (MEAN_BAG, MEAN_ACCESSORY)) for tbs in tbs_combos}
-
-    sg_combos = generate_all_combos([shoes_imgs, bag_imgs])
-    sg_relations = {sg:list((MEAN_TOP, MEAN_BOTTOM) + sg + (MEAN_ACCESSORY,)) for sg in sg_combos}
-
-    ga_combos = generate_all_combos([bag_imgs, accessory_imgs])
-    ga_relations = {ga:list((MEAN_TOP, MEAN_BOTTOM, MEAN_SHOES) + ga) for ga in ga_combos}
-
-    return {**tbs_relations, **sg_relations, **ga_relations}
-
-# Graph generation
-def generate_graph(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs):
-    # (tb) --> s --> g --> a
-    tik = time.perf_counter()
-
-    it_graph = nx.DiGraph()
-    all_edges = generate_graph_edges(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs)
-    item_graph = add_edges_neg_weight(it_graph, all_edges)
-
-    tok = time.perf_counter()
-    print(f"Graph generation took {tok-tik:0.4f} seconds")
-    return item_graph
-
 # Path search
-def bellman_ford_search_best_path_len(graph, combo_imgs_one, combo_imgs_two, last_imgs, num):
+def bellman_ford_search_best_path_len(graph, clothes, num):
     tik = time.perf_counter()
-    srcs = generate_all_combos([combo_imgs_one, combo_imgs_two])
-    targets = last_imgs
+    srcs = generate_all_combos([clothes['tops'], clothes['bottoms']])
+    targets = clothes['accessories']
+
+    # in the case of a small graph, don't do the variety optimization
+    # someone send help, how to do this beautifully :(
+    small_graph = False
+    num_items = [len(x) for x in clothes.values()]
+    for y in num_items:
+        if y <= 3:
+            small_graph = True
+            break
 
     def find_best_path(src):
         # Targets = all nodes in last category
@@ -100,20 +63,22 @@ def bellman_ford_search_best_path_len(graph, combo_imgs_one, combo_imgs_two, las
             for de in set_de:
                 graph.add_edge(de[0], de[1], weight=de[2])
 
-    # Repeatedly search, restoring graph aft searching a source
     valid_outfits = []
-    for s in srcs:
-        deleted_edges = []
-        if len(srcs) == 2:
-            num = 1
-        for _ in itertools.repeat(None, num):
-            # Given a src, find best outfit, rmv edges, repeat num times
+
+    if small_graph:
+        for s in srcs:
             s_best = find_best_path(s) # Output: (score, [outfit items])
-            valid_outfits.append(s_best)
-            if len(srcs) < 2:
-                break
-            deleted_edges.append(rmv_best_path(s_best))
-        restore_deleted_edges(deleted_edges)    
+            valid_outfits.append(s_best) 
+    else:
+        # Repeatedly search, restoring graph aft searching a source
+        for s in srcs:
+            deleted_edges = []
+            for _ in itertools.repeat(None, num):
+                # Given a src, find best outfit, rmv edges, repeat num times
+                s_best = find_best_path(s) # Output: (score, [outfit items])
+                valid_outfits.append(s_best)
+                deleted_edges.append(rmv_best_path(s_best))
+            restore_deleted_edges(deleted_edges)    
 
     tok = time.perf_counter()
     print(f"Semicombined (2 categ) directed graph path search for bests based on path length took {tok-tik:0.4f} seconds")
@@ -150,10 +115,12 @@ def score_final_outfits_in_descending(outfit_list):
 
     return sorted_list
 
-def get_top_outfits(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs, num=5):
-	Gsc2 = generate_graph(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs)   
-	outfit_list = bellman_ford_search_best_path_len(Gsc2, top_imgs, bottom_imgs, accessory_imgs, 2)
-	select_outfits = take_best_path_length_outfits(Gsc2, outfit_list, combo=2) # Get best 50 outfits to score    
+# clothes is a dictionary where the keys are tops, bottoms, shoes, bags, accessories
+# and the value is a list of the node names of the items 
+def get_top_outfits(graph, clothes, num=5):
+    # top_imgs, bottom_imgs, and accessory_imgs are node names that are used to do optimized search
+	outfit_list = bellman_ford_search_best_path_len(graph, clothes, 2)
+	select_outfits = take_best_path_length_outfits(graph, outfit_list, combo=2) # Get best 50 outfits to score    
 	sol = score_final_outfits_in_descending(select_outfits)
 	return sol[:num]
 
