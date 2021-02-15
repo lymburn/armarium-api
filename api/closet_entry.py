@@ -17,20 +17,24 @@ def create_closet_entry(closet_id, closet_entry):
         # Get file data, bucket + key info will be added in DAO
         base64_encoded_image = closet_entry.get("base64_encoded_image")
         filename = closet_entry.get("filename")
+        description = closet_entry.get("description")
         category = closet_entry.get("category")
 
-        closet_entry_model = ClosetEntry(base64_encoded_image, filename, '', '', category)
-
-        closet_entry_dao.create_closet_entry(closet_id, closet_entry_model)
-
-        return "Successfully created closet entry", 201
+        exist = closet_entry_dao.does_filename_exists_in_closet(closet_id, filename)
+    
+        if exist:
+            return "File with this filename for this closet already exists", 409
+        else:
+            closet_entry_model = ClosetEntry(base64_encoded_image, filename, description, '', '', category)
+            closet_entry_dao.create_closet_entry(closet_id, closet_entry_model)
+            return "Successfully created closet entry", 201
 
     except Exception as error:
         return jsonify(error = str(error)), 500
 
 def get_closet_entries_by_closet(closet_id):
     """
-    This function corresponds to a GET request for /api/closet/id/closet-entry
+    This function corresponds to a GET request for /api/closet/{closet-id}/closet-entry
     with a list of all closet entries in that closet being returned
 
     :param closet_id:      id of the closet to retrieve from
@@ -45,6 +49,7 @@ def get_closet_entries_by_closet(closet_id):
         for entry in closet_entries:
             json_entry = {"base64_encoded_image": entry.base64_encoded_image,
                           "filename": entry.filename,
+                          "description": entry.description,
                           "bucket_name": entry.bucket_name,
                           "object_key": entry.object_key,
                           "category": entry.category}
@@ -55,3 +60,9 @@ def get_closet_entries_by_closet(closet_id):
     
     except Exception as error:
         return jsonify(error = str(error)), 500
+
+
+def delete_closet_entry(closet_id, filename):
+    # TODO: call DAO delete_closet_entry
+    # New path needed: /closet/{closet-id}/closet-entry/{filename}
+    pass

@@ -24,4 +24,8 @@ class ClosetDAO:
         else:
             return closet_id
 
+    def delete_closet(self, username: str, closet_name: str):
+        # TODO: get closet id, get all files in closet, delete all files in s3, delete closet in DB
+        pass
+
 closet_dao = ClosetDAO()
