@@ -2,7 +2,7 @@ from flask import jsonify
 from data_access.closet_dao import closet_dao
 from model.closet_model import Closet
 from ml.outfit_generator import get_top_outfits
-from ml.graph_manager import generate_graph
+from ml.graph_manager import generate_graph, add_node_to_graph, remove_node_from_graph
 
 def create_closet(username, closet):
     """
@@ -91,10 +91,30 @@ def get_closet_graph():
     # TODO: some s3 connection that fetches graph from db
     pass
 
-def add_clothes_to_closet():
-    # TODO: get the graph and perform graph operation using graph manager
-    pass
+# TODO: unsure about the input, img is assumed to be a string used as node name
+# category is a string that indicates whether it is a top, bottom, shoes, bag, or accessory
+def add_clothes_to_closet(image):
+    # TODO: get graph from s3 
+    # creating the graph for now for testing purposes
+    print("reached the function!!!!")
+    graph = create_closet_graph()
 
-def remove_clothes_from_closet():
-    # TODO: get the graph and perform graph operation using graph manager
-    pass
+    # TODO: retreive the existing nodes in graph from s3
+    # hardcoding the results for testing purposes
+    clothes = {'tops':['test-outfit/top.jpg'],
+    'bottoms':['test-outfit/bottom.jpg'],
+    'shoes': ['test-outfit/shoes.jpg'],
+    'bags': ['test-outfit/bag.jpg'],
+    'accessories':['test-outfit/accessory.jpg']}
+
+    returned_graph = add_node_to_graph(graph, image.get('img'), image.get('category'), clothes)
+    # TODO: save the returned graph to s3
+
+def remove_clothes_from_closet(image):
+    # TODO: get graph from s3 
+    # creating the graph for now for testing purposes
+    graph = create_closet_graph()
+    returned_graph = remove_node_from_graph(graph, image.get('img'))
+
+    # TODO: save the returned graph to s3
+
