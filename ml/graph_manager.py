@@ -9,6 +9,7 @@ import time
 import networkx as nx
 import itertools
 from ml.outfit_grader import get_outfit_score
+import matplotlib.pyplot as plt
 
 # path to mean images
 MEAN_TOP = "ml/upper.png"
@@ -56,6 +57,20 @@ def generate_graph(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs):
     tok = time.perf_counter()
     print(f"Graph generation took {tok-tik:0.4f} seconds")
     return item_graph
+
+# graph plotting util function
+def plot_graph(graph):
+    edges = [(u, v) for (u, v, d) in graph.edges(data=True)]
+    pos = nx.spring_layout(graph)  # positions for all nodes
+    # nodes
+    nx.draw_networkx_nodes(graph, pos, node_size=700)
+    # edges
+    nx.draw_networkx_edges(graph, pos, edgelist=edges, width=2)
+    # labels
+    nx.draw_networkx_labels(graph, pos, font_size=20, font_family="sans-serif")
+
+    plt.axis("off")
+    plt.show()
 
 def add_tbs_edges(graph, tops, bottoms, shoes):
     tb_combos = generate_all_combos([tops, bottoms])
@@ -106,7 +121,14 @@ def add_node_to_graph(graph, img, category, clothes):
 
 # img is the name of the img that was used to add the node to the graph
 # img should be a unique name
-def remove_node_from_graph(graph, img):
-    graph.remove_node(img)
+def remove_node_from_graph(graph, img, category):
+
+    # this is the case when the node name is combined
+    if category == "top" or category == "bottom":
+        nodes = list(graph.nodes)
+        del_nodes = [k for k in nodes if img in k]
+        graph.remove_nodes_from(del_nodes)
+    else:
+        graph.remove_node(img)
     return graph
 
