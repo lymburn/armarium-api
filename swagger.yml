@@ -168,6 +168,58 @@ paths:
           description: Successfully retrieved best outfit 
         404:
           description: Could not find best outfit
+  /closet/add-item-to-closet:
+    post:
+      operationId: api.closet.add_clothes_to_closet
+      tags:
+        - "Closet"
+      summary: add an image to user's closet
+      description: add an image to user's closet by adding a node in graph
+      parameters:
+        - name: image
+          in: body
+          description: the image and the catefory of the image to be added
+          required: True
+          schema:
+            type: object
+            properties:
+              img:
+                type: string
+                description: The user's image
+              category:
+                type: string
+                description: The user's image category
+      responses:
+        200:
+          description: Successfully added item to closet
+        404:
+          description: Could not add item to closet
+  /closet/remove-item-from-closet:
+    post:
+      operationId: api.closet.remove_clothes_from_closet
+      tags:
+        - "Closet"
+      summary: remove an img from user's closet
+      description: remove an image from user's closet by removing a node in graph
+      parameters:
+        - name: image
+          in: body
+          description: the image to be added
+          required: True
+          schema:
+            type: object
+            properties:
+              img:
+                type: string
+                description: The user's image
+              category:
+                type: string
+                description: The user's image category
+      responses:
+        200:
+          description: Successfully removed item from closet
+        404:
+          description: Could not remove item from closet
 
           
 
