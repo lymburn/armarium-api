@@ -212,6 +212,9 @@ paths:
               img:
                 type: string
                 description: The user's image
+              category:
+                type: string
+                description: The user's image category
       responses:
         200:
           description: Successfully removed item from closet
