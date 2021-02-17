@@ -198,6 +198,29 @@ paths:
       responses:
         200:
           description: Successfully retrieved closet entries
+  /closet/{closet_id}/closet-entry/{closet_entry}:
+    delete:
+      operationId: api.closet_entry.delete_closet_entry
+      tags:
+        - "Closet Entry"
+      summary: Delete a closet entry by name
+      description: Delete a closet entry by name
+      parameters:
+        - name: closet_id
+          in: path
+          description: The id of the closet the file is in
+          type: string
+          required: True
+        - name: closet_entry
+          in: path
+          description: Filename of the closet entry
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully deleted closet entry
+        404:
+          description: Could not find the closet entry
   /closet/best-outfit:
     get:
       operationId: api.closet.get_best_outfit

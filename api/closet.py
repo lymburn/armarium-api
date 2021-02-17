@@ -71,13 +71,13 @@ def delete_closet(username, closet_name):
     """
 
     try:
-        # TODO: call DAO delete_closet
-        # closet = closet_dao.get_by_name(username, closet_name)
+        closet = closet_dao.get_by_name(username, closet_name)
 
-        # if closet is not None:
-        #     return jsonify(id=closet.closet_id,
-        #                    name=closet.closet_name)
-        # else:
+        if closet is not None:
+            closet_dao.delete_closet(closet)
+            return jsonify(id=closet.closet_id,
+                           name=closet.closet_name)
+        else:
             return 'Closet Not Found', 404
     except Exception as error:
         return jsonify(error=str(error)), 500

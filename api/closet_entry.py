@@ -62,7 +62,22 @@ def get_closet_entries_by_closet(closet_id):
         return jsonify(error = str(error)), 500
 
 
-def delete_closet_entry(closet_id, filename):
-    # TODO: call DAO delete_closet_entry
-    # New path needed: /closet/{closet-id}/closet-entry/{filename}
-    pass
+def delete_closet_entry(closet_id, closet_entry):
+    """
+    This function corresponds to a DELETE request for /api/closet/{closet-id}/closet-entry/{closet-entry}
+
+    :param closet_id:      id of the closet to delete from
+    :param closet_entry:   filename of closet entry to delete
+    :return:                201 on success, 404 if entry with object key does not exist
+    """
+    try:
+        exist = closet_entry_dao.does_filename_exists_in_closet(closet_id, closet_entry)
+    
+        if exist:
+            closet_entry_dao.delete_closet_entry(closet_id, closet_entry)
+            return "Successfully deleted closet entry", 201
+        else:
+            return "File not found", 404
+
+    except Exception as error:
+        return jsonify(error = str(error)), 500

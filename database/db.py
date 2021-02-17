@@ -11,12 +11,15 @@ import uuid
 import base64
 import os
 import io
+from sqlalchemy import or_
 from database.db_orm_mapping import sqla, Users, Closets, Files, RecommendedOutfits
 
 # TODO: Edit File functions to return description
 # TODO: Add try-except to catch SQLAlchemy errors
 
 # Database access functions
+
+
 def add_user(username: str, password_hash: str) -> None:
     usr = Users(username, password_hash)
     add_persist(usr)
@@ -28,13 +31,14 @@ def add_closet(closet_name: str, username: str) -> None:
 
 
 def add_file(object_key: str, filename: str, description: str, bucket_name: str, category: str, closet_id: int) -> None:
-    file = Files(object_key, filename, description, bucket_name, category, closet_id)
+    file = Files(object_key, filename, description,
+                 bucket_name, category, closet_id)
     add_persist(file)
 
 
-def add_recommended_outfit(outfit: List[str], closet_id: int) -> None:
-    outfit_str = ','.join(outfit)
-    rec_outfit = RecommendedOutfits(outfit_str, closet_id)
+def add_recommended_outfit(closet_id: int, top: str = '', bottom: str = '', shoes: str = '', bag: str = '', accessory: str = '') -> None:
+    rec_outfit = RecommendedOutfits(
+        closet_id, top, bottom, shoes, bag, accessory)
     add_persist(rec_outfit)
 
 
@@ -96,9 +100,14 @@ def delete_all_files_in_closet_category(closet_id: int, category: str) -> bool:
         return False
 
 
-def delete_all_closet_recommended_outfits():
-    # TODO:
-    pass
+def delete_all_recommended_outfits_with_file(closet_id: int, filename: str) -> None:
+    outfits = sqla.session.query(RecommendedOutfits) \
+        .filter(RecommendedOutfits.closet_id == closet_id) \
+        .filter(or_(RecommendedOutfits.top == filename, RecommendedOutfits.bottom == filename, RecommendedOutfits.shoes == filename, RecommendedOutfits.bag == filename, RecommendedOutfits.accessory == filename))
+    if outfits:
+        for out in outfits:
+            delete_persist(out)
+
 
 def delete_persist(obj: Any) -> None:
     # Helper func
@@ -184,7 +193,7 @@ def query_file_info(object_key: str) -> Dict:
         Files.object_key == object_key).all()
     res = {}
     if file:
-        res = {'filename': file[0].filename, 'bucket_name': file[0].bucket_name,
+        res = {'filename': file[0].filename, 'object_key': file[0].object_key, 'bucket_name': file[0].bucket_name,
                'category': file[0].category, 'closet_id': file[0].closet_id}
     return res
 
@@ -195,6 +204,6 @@ def query_file_key(closet_id: int, filename: str) -> List:
         Files.filename == filename, Files.closet_id == closet_id).all()
     res = []
     if files:
-        res = [{'object_key': f.object_key, 'bucket_name': f.bucket_name,
-                'category': f.category} for f in files]
+        res = [{'filename': f.filename, 'object_key': f.object_key, 'bucket_name': f.bucket_name,
+                'category': f.category, 'closet_id': f.closet_id} for f in files]
     return res

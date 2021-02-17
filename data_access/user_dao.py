@@ -28,8 +28,6 @@ class UserDAO:
 
     def delete_user(self, username: str):
         try:
-            # DB cascade deletes entries, but we need to ensure S3 files
-            # assoc with user are also deleted
             # NOTE: Assume only 1 bucket
             # TODO: Deal w potential errors from S3 delete
             user = db.query_user_info(username)

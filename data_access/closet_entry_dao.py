@@ -67,13 +67,15 @@ class ClosetEntryDAO:
         except Exception as error:
             raise error
 
-    def delete_closet_entry(self, closet_id, filename):
-        # TODO: get key, delete from s3, delete from DB
+    def delete_closet_entry(self, closet_id: int, filename: str):
         try:
-            and
+            files = db.query_file_key(closet_id, filename)
+            if len(files) > 0:
+                aws_s3.delete_object(files[0]['bucket_name'], files[0]['object_key'])
+                db.delete_all_recommended_outfits_with_file(closet_id, filename)
+                db.delete_file(files[0]['object_key'])
         except Exception as error:
             raise error
-        pass
 
 
 closet_entry_dao = ClosetEntryDAO()
