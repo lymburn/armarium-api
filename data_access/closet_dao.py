@@ -3,6 +3,7 @@ from model.closet_model import Closet
 import database.db as db
 import storage.aws_s3 as aws_s3
 from ml.outfit_generator import get_top_outfits
+from ml.graph_manager import generate_empty_graph
 
 
 class ClosetDAO:
@@ -30,7 +31,7 @@ class ClosetDAO:
 
     def create_closet_graph(self, username: str, closet_name: str):
         try:
-            graph = nx.DiGraph()  # TODO: Or call some "init_graph" / "create_empty_graph" func
+            graph = generate_empty_graph()
             buckets = aws_s3.get_buckets()
             bucket_name = buckets[0]
             object_key = aws_s3.create_object_key(closet_name)
