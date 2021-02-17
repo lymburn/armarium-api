@@ -14,7 +14,6 @@ import io
 from sqlalchemy import or_
 from database.db_orm_mapping import sqla, Users, Closets, Files, RecommendedOutfits
 
-# TODO: Edit File functions to return description
 # TODO: Add try-except to catch SQLAlchemy errors
 
 # Database access functions
@@ -161,8 +160,8 @@ def query_all_files_from_closet(closet_id: int) -> List:
         Files.closet_id == closet_id).all()
     res = []
     if files:
-        res = [{'filename': f.filename, 'description': f.description, 'object_key': f.object_key, 'bucket_name': f.bucket_name,
-                'category': f.category, 'closet_id': f.closet_id} for f in files]
+        res = [{'filename': f.filename, 'description': f.description, 'object_key': f.object_key,
+                'bucket_name': f.bucket_name, 'category': f.category, 'closet_id': f.closet_id} for f in files]
 
     return res
 
@@ -174,7 +173,8 @@ def query_all_files_from_closet_grouped_by_category(closet_id: int) -> DefaultDi
     if files:
         for f in files:
             res[f.category].append(
-                {'filename': f.filename, 'object_key': f.object_key, 'bucket_name': f.bucket_name})
+                {'filename': f.filename, 'description': f.description, 'object_key': f.object_key,
+                    'bucket_name': f.bucket_name, 'category': f.category, 'closet_id': f.closet_id})
     return res
 
 
@@ -183,8 +183,8 @@ def query_all_files_from_closet_category(closet_id: int, category: str) -> List:
         Files.closet_id == closet_id, Files.category == category).all()
     res = []
     if files:
-        res = [{'filename': f.filename, 'object_key': f.object_key,
-                'bucket_name': f.bucket_name} for f in files]
+        res = [{'filename': f.filename, 'description': f.description, 'object_key': f.object_key,
+                'bucket_name': f.bucket_name, 'category': f.category, 'closet_id': f.closet_id} for f in files]
     return res
 
 
@@ -193,17 +193,26 @@ def query_file_info(object_key: str) -> Dict:
         Files.object_key == object_key).all()
     res = {}
     if file:
-        res = {'filename': file[0].filename, 'object_key': file[0].object_key, 'bucket_name': file[0].bucket_name,
-               'category': file[0].category, 'closet_id': file[0].closet_id}
+        res = {'filename': file[0].filename, 'description': file[0].description, 'object_key': file[0].object_key,
+               'bucket_name': file[0].bucket_name, 'category': file[0].category, 'closet_id': file[0].closet_id}
     return res
 
 
 def query_file_key(closet_id: int, filename: str) -> List:
-    # Returns list since a closet may have multiple files with the same name
     files = sqla.session.query(Files).filter(
         Files.filename == filename, Files.closet_id == closet_id).all()
     res = []
     if files:
-        res = [{'filename': f.filename, 'object_key': f.object_key, 'bucket_name': f.bucket_name,
-                'category': f.category, 'closet_id': f.closet_id} for f in files]
+        res = [{'filename': f.filename, 'description': f.description, 'object_key': f.object_key,
+                'bucket_name': f.bucket_name, 'category': f.category, 'closet_id': f.closet_id} for f in files]
+    return res
+
+
+def query_graph_key(closet_id: int) -> Dict:
+    file = sqla.session.query(Files).filter(
+        Files.closet_id == closet_id, Files.category == 'graph').all()
+    res = {}
+    if file:
+        res = {'filename': file[0].filename, 'description': file[0].description, 'object_key': file[0].object_key,
+               'bucket_name': file[0].bucket_name, 'category': file[0].category, 'closet_id': file[0].closet_id}
     return res

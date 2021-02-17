@@ -15,7 +15,10 @@ MODEL.load_state_dict(torch.load("./ml/model_train_relation_vse_type_cond_scales
 MODEL.eval()
 
 def get_outfit_score(outfit_images):
-    img = get_img_tensor_from_outfit(outfit_images)
+    # TODO:
+    # outfit image = ['objkey1', 'objkey2'...]
+    # for out in outfit images: imgs.append(aws_s3.get file())
+    img = get_img_tensor_from_outfit(outfit_images) # use img list
     model_out = MODEL._compute_score(img)
     model_out = model_out[0]
     score = model_out.item()

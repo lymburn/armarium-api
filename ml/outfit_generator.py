@@ -20,8 +20,8 @@ def generate_all_combos(ls):
 # Path search
 def bellman_ford_search_best_path_len(graph, clothes, num):
     tik = time.perf_counter()
-    srcs = generate_all_combos([clothes['tops'], clothes['bottoms']])
-    targets = clothes['accessories']
+    srcs = generate_all_combos([clothes['top'], clothes['bottom']])
+    targets = clothes['accessory']
 
     # in the case of a small graph, don't do the variety optimization
     # someone send help, how to do this beautifully :(
@@ -115,7 +115,7 @@ def score_final_outfits_in_descending(outfit_list):
 
     return sorted_list
 
-# clothes is a dictionary where the keys are tops, bottoms, shoes, bags, accessories
+# clothes is a dictionary where the keys are the clothing categories
 # and the value is a list of the node names of the items 
 def get_top_outfits(graph, clothes, num=5):
     # top_imgs, bottom_imgs, and accessory_imgs are node names that are used to do optimized search

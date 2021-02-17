@@ -80,37 +80,36 @@ def add_tbs_edges(graph, tops, bottoms, shoes):
     return returned_graph
 
 # category is the type of image being added: could be top, bottom, shoes, bag, or accessory
-# img is a string that represenets the image being added (should be unique) 
-def add_node_to_graph(graph, img, category, clothes):
+def add_node_to_graph(graph, image_object_key, category, clothes):
 	# order is top+bottom -> shoes -> bag -> accessory
     returned_graph = None
 
     if category == "top":
         # add top+bottom and shoes edges
-        returned_graph = add_tbs_edges(graph, [img], clothes['bottoms'], clothes['shoes'])
+        returned_graph = add_tbs_edges(graph, [image_object_key], clothes['bottom'], clothes['shoes'])
     elif category == "bottom":
         # add top+bottom and shoes edges
-        returned_graph = add_tbs_edges(graph, clothes['tops'], [img], clothes['shoes'])
+        returned_graph = add_tbs_edges(graph, clothes['top'], [image_object_key], clothes['shoes'])
     elif category == "shoes":
         # add top+bottom and shoes edges
-        gph = add_tbs_edges(graph, clothes['tops'], clothes['bottoms'], [img])
+        gph = add_tbs_edges(graph, clothes['top'], clothes['bottom'], [image_object_key])
         # add shoes and bags edges
-        sg_combos = generate_all_combos([[img], clothes['bags']])
+        sg_combos = generate_all_combos([[image_object_key], clothes['bag']])
         sg_relations = {sg:list((MEAN_TOP, MEAN_BOTTOM) + sg + (MEAN_ACCESSORY,)) for sg in sg_combos}
         returned_graph = add_edges_neg_weight(gph, {**sg_relations})
 
     elif category == "bag":
         # add shoes and bag edges
-        gs_combos = generate_all_combos([clothes['shoes'], [img]])
+        gs_combos = generate_all_combos([clothes['shoes'], [image_object_key]])
         gs_relations = {gs:list((MEAN_TOP, MEAN_BOTTOM) + gs + (MEAN_ACCESSORY,)) for gs in gs_combos}
         # add bag and accessories edges
-        ga_combos = generate_all_combos([[img], clothes['accessories']])
+        ga_combos = generate_all_combos([[image_object_key], clothes['accessory']])
         ga_relations = {ga:list((MEAN_TOP, MEAN_BOTTOM, MEAN_SHOES) + ga) for ga in ga_combos}
         returned_graph = add_edges_neg_weight(graph, {**gs_relations, **ga_relations})
 
     elif category == "accessory":
         # add bags and accessory edges
-        ag_combos = generate_all_combos([clothes['bags'], [img]])
+        ag_combos = generate_all_combos([clothes['bag'], [image_object_key]])
         ag_relations = {ag:list((MEAN_TOP, MEAN_BOTTOM, MEAN_SHOES) + ag) for ag in ag_combos}
         returned_graph = add_edges_neg_weight(graph, {**ag_relations})
 

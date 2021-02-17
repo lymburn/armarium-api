@@ -3,6 +3,7 @@ import database.db as db
 import storage.aws_s3 as aws_s3
 import base64
 import io
+from ml.graph_manager import add_node_to_graph, remove_node_from_graph
 
 
 class ClosetEntryDAO:
@@ -58,6 +59,7 @@ class ClosetEntryDAO:
             db.add_file(object_key, filename, description, bucket_name, category, closet_id)
             self.upload_image(bucket_name, object_key,
                               closet_entry_model.base64_encoded_image)
+            self.add_item_to_closet_graph(closet_id, object_key, category)
         except Exception as error:
             raise error
 
@@ -67,6 +69,28 @@ class ClosetEntryDAO:
         except Exception as error:
             raise error
 
+    def add_item_to_closet_graph(closet_id: int, image_object_key: str, category: str):
+        try:
+            # Fetch graph from S3 + get all file obj keys for closet
+            graph_info = db.query_graph_key(closet_id)
+            graph = aws_s3.get_graph(graph_info['bucket_name'], graph_info['object_key'])
+
+            files = db.query_all_files_from_closet_grouped_by_category(closet_id)
+            clothes = {'top': [f['object_key'] for f in files['top']],
+            'bottom': [f['object_key'] for f in files['bottom']],
+            'shoes': [f['object_key'] for f in files['shoes']],
+            'bag': [f['object_key'] for f in files['bag']],
+            'accessory': [f['object_key'] for f in files['accessory']]}
+
+            # Add to graph + save new graph in S3
+            returned_graph = add_node_to_graph(graph, image_object_key, category, clothes)
+            aws_s3.upload_graph(returned_graph, graph_info['bucket_name'], graph_info['object_key'])
+
+            print(f"DEBUG: List of nodes in returned graph: {list(returned_graph.nodes)}")
+        except Exception as error:
+            raise error
+    
+    
     def delete_closet_entry(self, closet_id: int, filename: str):
         try:
             files = db.query_file_key(closet_id, filename)
@@ -74,6 +98,23 @@ class ClosetEntryDAO:
                 aws_s3.delete_object(files[0]['bucket_name'], files[0]['object_key'])
                 db.delete_all_recommended_outfits_with_file(closet_id, filename)
                 db.delete_file(files[0]['object_key'])
+                self.remove_item_from_closet_graph(closet_id, filename)
+        except Exception as error:
+            raise error
+    
+    
+    def remove_item_from_closet_graph(self, closet_id: int, filename: str):
+        try:
+            # Get graph from S3 + file info from database
+            graph_info = db.query_graph_key(closet_id)
+            graph = aws_s3.get_graph(graph_info['bucket_name'], graph_info['object_key'])
+            files = db.query_file_key(closet_id, filename)
+
+            # Edit graph + overwrite in S3
+            returned_graph = remove_node_from_graph(graph, files[0]['object_key'], files[0]['category'])            
+            aws_s3.upload_graph(returned_graph, graph_info['bucket_name'], graph_info['object_key'])
+
+            print(f"Remove from graph, returned graph nodes: {list(returned_graph.nodes)}")
         except Exception as error:
             raise error
 
