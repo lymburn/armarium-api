@@ -1,5 +1,6 @@
 from model.closet_model import Closet
 import database.db as db
+import storage.aws_s3 as aws_s3
 
 class ClosetDAO:
     def get_by_name(self, username: str, closet_name: str):
@@ -29,5 +30,17 @@ class ClosetDAO:
     Call algorithms from ML
     (maybe call to S3 to get img data to return back if ness)
     '''
+
+    def delete_closet(self, closet_model: Closet):
+        # Assuming only 1 AWS bucket
+        try:
+            closet_files = db.query_all_files_from_closet(closet_model.closet_id)
+            if len(closet_files) > 0:
+                bucket = closet_files[0]['bucket_name']
+                keys = [f['object_key'] for f in closet_files]
+                aws_s3.delete_objects(bucket, keys)
+            db.delete_closet(closet_model.closet_id)
+        except Exception as error:
+            raise error
 
 closet_dao = ClosetDAO()

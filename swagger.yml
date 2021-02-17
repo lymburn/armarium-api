@@ -56,6 +56,23 @@ paths:
           description: Successfully retrieved user
         404:
           description: Could not find the user
+    delete:
+      operationId: api.user.delete_user
+      tags:
+        - "User"
+      summary: Delete a user
+      description: Delete a user
+      parameters:
+        - name: username
+          in: path
+          description: The user's username
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully deleted user
+        404:
+          description: User not found
   /user/{username}/closet/{closet_name}:
     get:
       operationId: api.closet.get_closet
@@ -77,6 +94,28 @@ paths:
       responses:
         200:
           description: Successfully retrieved closet
+        404:
+          description: Could not find the closet
+    delete:
+      operationId: api.closet.delete_closet
+      tags:
+        - "Closet"
+      summary: Delete a user's closet by name
+      description: Delete a user's closet by name
+      parameters:
+        - name: username
+          in: path
+          description: The user's username
+          type: string
+          required: True
+        - name: closet_name
+          in: path
+          description: Name of the closet
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully deleted closet
         404:
           description: Could not find the closet
   /user/{username}/closet/:
@@ -133,6 +172,9 @@ paths:
               filename:
                 type: string
                 description: File name for the image
+              description:
+                type: string
+                description: User description for the image
               category:
                 type: string
                 description: Clothing category
@@ -140,7 +182,7 @@ paths:
         201:
           description: Successfully created closet entry
         409:
-          description: Closet entry with object key already exists
+          description: Closet entry with this filename already exists for this closet
     get:
       operationId: api.closet_entry.get_closet_entries_by_closet
       tags:
@@ -156,6 +198,29 @@ paths:
       responses:
         200:
           description: Successfully retrieved closet entries
+  /closet/{closet_id}/closet-entry/{closet_entry}:
+    delete:
+      operationId: api.closet_entry.delete_closet_entry
+      tags:
+        - "Closet Entry"
+      summary: Delete a closet entry by name
+      description: Delete a closet entry by name
+      parameters:
+        - name: closet_id
+          in: path
+          description: The id of the closet the file is in
+          type: string
+          required: True
+        - name: closet_entry
+          in: path
+          description: Filename of the closet entry
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully deleted closet entry
+        404:
+          description: Could not find the closet entry
   /closet/best-outfit:
     get:
       operationId: api.closet.get_best_outfit

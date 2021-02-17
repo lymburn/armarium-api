@@ -48,7 +48,23 @@ def get_user_by_username(username):
         return jsonify(error = str(error)), 500
         
     
-    
+def delete_user(username):
+    """
+    This function corresponds to a DELETE request to /api/user/{username}
+
+    :param user:    The info of the user to create 
+    :return:        202 on success, 404 if user does not exist
+    """
+    try:
+        deleted = user_dao.delete_user(username)
+
+        if deleted:
+            return "Successfully deleted user", 202
+        else:
+            return "User not found", 404
+
+    except Exception as error:
+        return jsonify(error = str(error)), 500
 
 
 

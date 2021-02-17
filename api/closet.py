@@ -4,6 +4,7 @@ from model.closet_model import Closet
 from ml.outfit_generator import get_top_outfits
 from ml.graph_manager import generate_graph, add_node_to_graph, remove_node_from_graph
 
+
 def create_closet(username, closet):
     """
     This function corresponds to a POST request to /api/user/{user_name}/closet/
@@ -19,12 +20,13 @@ def create_closet(username, closet):
 
         if closet is not None:
             return "Closet with name for this user already exists", 409
-        else:      
+        else:
             closet_dao.create_closet(username, closet_name)
             return "Successfully created closet", 201
 
     except Exception as error:
-        return jsonify(error = str(error)), 500
+        return jsonify(error=str(error)), 500
+
 
 def get_closets(user_name):
     """
@@ -35,6 +37,7 @@ def get_closets(user_name):
     :return:               list of user's closets
     """
     return ''
+
 
 def get_closet(username, closet_name):
     """
@@ -48,14 +51,38 @@ def get_closet(username, closet_name):
 
     try:
         closet = closet_dao.get_by_name(username, closet_name)
-        
+
         if closet is not None:
-            return jsonify(id = closet.closet_id,
-                           name = closet.closet_name)
+            return jsonify(id=closet.closet_id,
+                           name=closet.closet_name)
         else:
             return 'Closet Not Found', 404
     except Exception as error:
-        return jsonify(error = str(error)), 500
+        return jsonify(error=str(error)), 500
+
+
+def delete_closet(username, closet_name):
+    """
+    This function corresponds to a DELETE request for /api/user/{user_name}/closet/{closet_name}
+    with the specified closet being returned
+
+    :param user_name:      username of the user to retrieve from
+    :param closet_name:    name of the closet to retrieve
+    :return:               (200) the user's closet matching with the name, (404) closet not found
+    """
+
+    try:
+        closet = closet_dao.get_by_name(username, closet_name)
+
+        if closet is not None:
+            closet_dao.delete_closet(closet)
+            return jsonify(id=closet.closet_id,
+                           name=closet.closet_name)
+        else:
+            return 'Closet Not Found', 404
+    except Exception as error:
+        return jsonify(error=str(error)), 500
+
 
 # TODO: def recommend_outfits(...):
 '''
