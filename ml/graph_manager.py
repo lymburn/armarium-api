@@ -58,6 +58,10 @@ def generate_graph(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs):
     print(f"Graph generation took {tok-tik:0.4f} seconds")
     return item_graph
 
+def generate_empty_graph():
+    graph = nx.DiGraph()
+    return graph
+
 # graph plotting util function
 def plot_graph(graph):
     edges = [(u, v) for (u, v, d) in graph.edges(data=True)]

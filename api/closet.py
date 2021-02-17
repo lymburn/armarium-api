@@ -2,7 +2,7 @@ from flask import jsonify
 from data_access.closet_dao import closet_dao
 from model.closet_model import Closet
 from ml.outfit_generator import get_top_outfits
-from ml.graph_manager import generate_graph, add_node_to_graph, remove_node_from_graph
+from ml.graph_manager import generate_graph, generate_empty_graph, add_node_to_graph, remove_node_from_graph
 
 
 def create_closet(username, closet):
@@ -84,12 +84,7 @@ def delete_closet(username, closet_name):
         return jsonify(error=str(error)), 500
 
 
-# TODO: def recommend_outfits(...):
-'''
-
-'''
 # TODO: make outfit_images an input instead of hardcode
-# TODO: move get_best_outfit to closet_dao
 def get_best_outfit():
     try:
         # hardcode the clothes dictionary for now, will retrieve from s3 and process in the future
@@ -111,7 +106,7 @@ def get_best_outfit():
 def create_closet_graph():
     try:
         # TODO: get clothings from db or pass it in instead of hardcode
-        graph = generate_graph(['test-outfit/top.jpg'],['test-outfit/bottom.jpg'],['test-outfit/shoes.jpg'],['test-outfit/bag.jpg'],['test-outfit/accessory.jpg'])
+        graph = generate_empty_graph()
         # TODO: save this graph to s3
         return graph
     except Exception as error:
@@ -137,6 +132,9 @@ def add_clothes_to_closet(image):
         'shoes': ['test-outfit/shoes.jpg'],
         'bags': ['test-outfit/bag.jpg'],
         'accessories':['test-outfit/accessory.jpg']}
+        # clothes = {
+        # 'tops':[], 'bottoms':[], 'shoes':[], 'bags':[], 'accessories':[]
+        # }
 
         returned_graph = add_node_to_graph(graph, image.get('img'), image.get('category'), clothes)
 
