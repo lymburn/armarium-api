@@ -100,3 +100,6 @@ ENV/
 
 # Database
 *.db
+
+# ML model
+*.pth
