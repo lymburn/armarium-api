@@ -235,7 +235,6 @@ def filter_out_recent_outfits(closet_id: int, best_outfits: List[List[str]]) -> 
     # NOTE: Assumed that best_outfits contains list of object keys + rec_outfits will also return object keys
     rec_outfits = query_recommended_outfits_of_closet(closet_id)
     if len(rec_outfits) > 0:
-        # TODO:
         cleaned = false
         used_outfits = []
         n = 6
