@@ -109,9 +109,11 @@ def score_final_outfits_in_descending(outfit_list):
     score_dict = dict()
     for outfit in outfit_list:
         score = get_outfit_score(outfit)
+        print(f"score: {score}")
         score_dict[float(score)] = outfit
 
     sorted_list = sorted(score_dict.items(), reverse=True)
+    print(f"list {sorted_list}")
 
     return sorted_list
 

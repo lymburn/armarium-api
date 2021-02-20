@@ -22,7 +22,7 @@ def create_object_key(filename: str) -> str:
     # This should allow us to search for filename as a substring of object_key in Files, if needed
     uuid_str = str(uuid.uuid4())[:8]
     obj_key = uuid_str + '-' + filename
-    print(f"DEBUG: Object key, {obj_key}")
+    # print(f"DEBUG: Object key, {obj_key}")
     return obj_key
 
 
@@ -186,12 +186,14 @@ def get_graph(bucket_name: str, object_key: str) -> Any:
         return json_graph.node_link_graph(decoded_to_json)
 
 
-def get_image(bucket_name: str, object_key: str) -> Image:
+def get_image(object_key: str) -> Image:
     # Decodes S3 returned data, wrap in BytesIO obj, then convert to PIL Image obj
     # NOTE: Assumes returned data be base64 encoded byte stream, b/c that is what is assumed to be uploaded
     # NOTE: Since this returns PIL Image obj, there is no need to call "base64_to_image()" from ML code
+    # NOTE: Assumes we only have 1 bucket, so query for buckets + take 1st one
     try:
-        img_data = get_object(bucket_name, object_key)
+        buckets = get_buckets()
+        img_data = get_object(buckets[0], object_key)
         img_data = base64.b64decode(img_data)
         img_bytes = io.BytesIO(img_data)
         img = Image.open(img_bytes)

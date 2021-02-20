@@ -92,7 +92,8 @@ def get_best_outfit(closet_id):
     """
     try:
         outfit_items = closet_dao.recommend_outfit(closet_id)
-        return jsonify(outfit_items), 200
+        # return "Success", 200
+        return jsonify(outfit = outfit_items), 200
     except Exception as error:
         return jsonify(error = str(error)), 500
 

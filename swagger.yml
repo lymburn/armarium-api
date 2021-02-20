@@ -237,25 +237,25 @@ paths:
       responses:
         200:
           description: Successfully retrieved best outfit
-          content:
-            schema:
-              type: object
-              properties:
-                top:
-                  type: string
-                  description: Image data for 'top' of best outfit
-                bottom:
-                  type: string
-                  description: Image data for 'bottom' of best outfit
-                shoes:
-                  type: string
-                  description: Image data for 'shoes' of best outfit
-                bag:
-                  type: string
-                  description: Image data for 'bag' of best outfit
-                accessory:
-                  type: string
-                  description: Image data for 'accessory' of best outfit
+          # content:
+          #   schema:
+          #     type: object
+          #     properties:
+          #       top:
+          #         type: string
+          #         description: Image data for 'top' of best outfit
+          #       bottom:
+          #         type: string
+          #         description: Image data for 'bottom' of best outfit
+          #       shoes:
+          #         type: string
+          #         description: Image data for 'shoes' of best outfit
+          #       bag:
+          #         type: string
+          #         description: Image data for 'bag' of best outfit
+          #       accessory:
+          #         type: string
+          #         description: Image data for 'accessory' of best outfit
         404:
           description: Could not find best outfit
   

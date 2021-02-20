@@ -69,7 +69,7 @@ class ClosetEntryDAO:
         except Exception as error:
             raise error
 
-    def add_item_to_closet_graph(closet_id: int, image_object_key: str, category: str):
+    def add_item_to_closet_graph(self, closet_id: int, image_object_key: str, category: str):
         try:
             # Fetch graph from S3 + get all file obj keys for closet
             graph_info = db.query_graph_key(closet_id)
@@ -86,7 +86,7 @@ class ClosetEntryDAO:
             returned_graph = add_node_to_graph(graph, image_object_key, category, clothes)
             aws_s3.upload_graph(returned_graph, graph_info['bucket_name'], graph_info['object_key'])
 
-            print(f"DEBUG: List of nodes in returned graph: {list(returned_graph.nodes)}")
+            # print(f"DEBUG: List of nodes in returned graph: {list(returned_graph.nodes)}")
         except Exception as error:
             raise error
     
@@ -95,10 +95,10 @@ class ClosetEntryDAO:
         try:
             files = db.query_file_key(closet_id, filename)
             if len(files) > 0:
+                self.remove_item_from_closet_graph(closet_id, filename)
                 aws_s3.delete_object(files[0]['bucket_name'], files[0]['object_key'])
                 db.delete_all_recommended_outfits_with_file(closet_id, filename)
                 db.delete_file(files[0]['object_key'])
-                self.remove_item_from_closet_graph(closet_id, filename)
         except Exception as error:
             raise error
     
@@ -111,7 +111,7 @@ class ClosetEntryDAO:
             files = db.query_file_key(closet_id, filename)
 
             # Edit graph + overwrite in S3
-            returned_graph = remove_node_from_graph(graph, files[0]['object_key'], files[0]['category'])            
+            returned_graph = remove_node_from_graph(graph, files[0]['object_key'], files[0]['category'])    
             aws_s3.upload_graph(returned_graph, graph_info['bucket_name'], graph_info['object_key'])
 
             print(f"Remove from graph, returned graph nodes: {list(returned_graph.nodes)}")
