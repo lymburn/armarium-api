@@ -71,14 +71,29 @@ class ClosetDAO:
         # NOTE: Can specify # of returned outfits, default 5 or less
         outfits = get_top_outfits(graph, clothes)
         # TODO: Edit function to change output to smth like [[outfit obj key nodes]]
-        
-        # TODO: do smth w recommendedOutfits + return top oufit CHECK that RecOutfit holds obj keys + not filenames
-        outfit = .... (from above), list of keys
-        # TODO: Return outfit data
-        for out in outfit:
-            aws_s3.get_file()  # return json obj of byte strs
 
-        pass
+        # Use RecommendedOutfits table to filter out recent, repetitive recommendations
+        # and record this newest suggestion in the table
+        best_outfits = db.filter_out_recent_outfits(closet_id, outfits)
+        best = best_outfits[0]
+        db.add_recommended_outfit(
+            closet_id, best[0], best[1], best[2], best[3], best[4])
+        # TODO: CHECK that RecOutfit holds obj keys + not filenames
+
+        # TODO: Chk return outfit data in format ready for "jsonify", copied / sim to closet_entry.py get
+        json_entries = []
+        for it in best:
+            info = db.query_file_info(it)
+            data = aws_s3.get_image_data(
+                info['bucket_name'], info['object_key'])
+            json_entries.append({"base64_encoded_image": data,
+                                 "filename": info['filename'],
+                                 "description": info['description'],
+                                 "bucket_name": info['bucket_name'],
+                                 "object_key": info['object_key'],
+                                 "category": info['category']})
+
+        return json_entries
 
 
 closet_dao = ClosetDAO()

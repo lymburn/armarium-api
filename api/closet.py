@@ -91,8 +91,8 @@ def get_best_outfit(closet_id):
     :return:            TODO!
     """
     try:
-        outfit = closet_dao.recommend_outfit()
-        return jsonify()
+        outfit_items = closet_dao.recommend_outfit(closet_id)
+        return jsonify(outfit_items), 200
     except Exception as error:
         return jsonify(error = str(error)), 500
 
