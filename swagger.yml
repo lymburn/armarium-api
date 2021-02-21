@@ -12,6 +12,32 @@ basePath: "/api"
 
 # Paths supported by the application
 paths:
+  /login/:
+    post:
+      operationId: api.login
+      tags:
+        - "User"
+      summary: Check username and password for login
+      description: Check username and password for login
+      parameters:
+        - name: user
+          in: body
+          description: User profile to authenticate
+          required: True
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: The user's username
+              password:
+                type: string
+                description: The user's password
+      responses:
+        201:
+          description: Successful authentication
+        404:
+          description: User not found
   /user/:
     post:
       operationId: api.user.create_user

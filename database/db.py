@@ -126,6 +126,12 @@ def query_user_info(username: str) -> Dict:
     return res
 
 
+def check_user_info_correct(username: str, password_hash: str) -> bool:
+    usr = sqla.session.query(Users).filter(
+        Users.username == username, Users.password_hash == password_hash).all()
+    return True if usr else False
+
+
 def query_closet_info(closet_id: int) -> Dict:
     closet = sqla.session.query(Closets).filter(
         Closets.closet_id == closet_id).all()
