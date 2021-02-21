@@ -1,5 +1,4 @@
 from flask import jsonify
-# import database.db as db
 from data_access.user_dao import user_dao
 from model.user_model import User
 
