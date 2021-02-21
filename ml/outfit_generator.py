@@ -121,6 +121,7 @@ def score_final_outfits_in_descending(outfit_list):
 # and the value is a list of the node names of the items 
 def get_top_outfits(graph, clothes, num=5):
     # top_imgs, bottom_imgs, and accessory_imgs are node names that are used to do optimized search
+    # NOTE: Returns [(score,[keys])]
 	outfit_list = bellman_ford_search_best_path_len(graph, clothes, 2)
 	select_outfits = take_best_path_length_outfits(graph, outfit_list, combo=2) # Get best 50 outfits to score    
 	sol = score_final_outfits_in_descending(select_outfits)

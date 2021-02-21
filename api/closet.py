@@ -88,11 +88,10 @@ def get_best_outfit(closet_id):
     with a recommended outfit for that closet being returned
 
     :param closet_id:   id of the closet the user wants recommendations from
-    :return:            TODO!
+    :return:            (200) data and metadata of outfit recommended to user
     """
     try:
         outfit_items = closet_dao.recommend_outfit(closet_id)
-        # return "Success", 200
         return jsonify(outfit = outfit_items), 200
     except Exception as error:
         return jsonify(error = str(error)), 500

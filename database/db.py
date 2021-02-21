@@ -231,20 +231,23 @@ def query_recommended_outfits_of_closet(closet_id: int, oldest: datetime.timedel
     return res
 
 
-def filter_out_recent_outfits(closet_id: int, best_outfits: List[List[str]]) -> List:
+def filter_out_recent_outfits(closet_id: int, best_outfits: List) -> List:
     # NOTE: Assumed that best_outfits contains list of object keys + rec_outfits will also return object keys
+    # NOTE: best_outfits = [(score, [outfit])]
+    # TODO: (Opt) Incorporate score in some way. Eg. Higher score outfits can be repeated more often?
     rec_outfits = query_recommended_outfits_of_closet(closet_id)
+    bests = [b[1] for b in best_outfits]
     if len(rec_outfits) > 0:
         cleaned = false
         used_outfits = []
         n = 6
         while not cleaned:
             for rec in rec_outfits:
-                if rec['outfit'] in best_outfits:
+                if rec['outfit'] in bests:
                     used_outfits.append(rec['outfit'])
-                    best_outfits.remove(rec['outfit'])
-            if len(used_outfits) == len(best_outfits):
-                best_outfits = used_outfits
+                    bests.remove(rec['outfit'])
+            if len(used_outfits) == len(bests):
+                bests = used_outfits
                 used_outfits = []
                 rec_outfits = query_recommended_outfits_of_closet(
                     closet_id, oldest=datetime.timedelta(days=n))
@@ -252,13 +255,4 @@ def filter_out_recent_outfits(closet_id: int, best_outfits: List[List[str]]) -> 
             else:
                 cleaned = true
 
-    return best_outfits
-
-
-# def outfit_dict_to_list(outfits: List[Dict[str, Any]]) -> List[List[str]]:
-#     # Helper func, idk if needed or not
-#     # NOTE: Desired List[str] = [top, bottom, shoes, bag, accessory]
-#     org_outfits = []
-#     for out in outfits:
-#         org_outfits.append([])
-#     pass
+    return bests

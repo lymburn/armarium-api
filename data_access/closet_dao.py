@@ -70,22 +70,15 @@ class ClosetDAO:
 
         # NOTE: Can specify # of returned outfits, default 5 or less
         outfits = get_top_outfits(graph, clothes)
-        # NOTE: outfits = [(score,[keys])]
-        print("CD1", outfits)
 
         # Use RecommendedOutfits table to filter out recent, repetitive recommendations
         # and record this newest suggestion in the table
-        # best_outfits = db.filter_out_recent_outfits(closet_id, outfits)
-        # print("CD2", len(best_outfits))
-        # best = best_outfits[0]
-        # print(best)
+        best_outfits = db.filter_out_recent_outfits(closet_id, outfits)
+        best = best_outfits[0]
         # db.add_recommended_outfit(
         #     closet_id, best[0], best[1], best[2], best[3], best[4])
-        # TODO: CHECK that RecOutfit holds obj keys + not filenames
+        # TODO: Debug add_rec
 
-        # TODO: Chk return outfit data in format ready for "jsonify", copied / sim to closet_entry.py get
-        best = outfits[0][1]
-        print(best)
         json_entries = []
         for it in best:
             info = db.query_file_info(it)
