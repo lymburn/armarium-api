@@ -14,7 +14,7 @@ basePath: "/api"
 paths:
   /login/:
     post:
-      operationId: api.login
+      operationId: api.user.login
       tags:
         - "User"
       summary: Check username and password for login
