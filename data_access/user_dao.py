@@ -48,7 +48,6 @@ class UserDAO:
             return ret
 
     def login(self, username: str, password_hash: str):
-        # TODO:
         try:
             info_correct = db.check_user_info_correct(username, password_hash)
             res = []
