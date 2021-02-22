@@ -221,7 +221,7 @@ def query_graph_key(closet_id: int) -> Dict:
 
 
 def query_recommended_outfits_of_closet(closet_id: int, oldest: datetime.timedelta = datetime.timedelta(days=7)) -> List:
-    oldest_ts = datetime.datetime.utcnow() - oldest
+    oldest_ts = datetime.datetime.today() - oldest
     outfits = sqla.session.query(RecommendedOutfits).filter(
         RecommendedOutfits.closet_id == closet_id, RecommendedOutfits.timestamp >= oldest_ts).all()
     res = []

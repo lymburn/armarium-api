@@ -75,8 +75,8 @@ class ClosetDAO:
         # and record this newest suggestion in the table
         best_outfits = db.filter_out_recent_outfits(closet_id, outfits)
         best = best_outfits[0]
-        # db.add_recommended_outfit(
-        #     closet_id, best[0], best[1], best[2], best[3], best[4])
+        db.add_recommended_outfit(
+            closet_id, best[0], best[1], best[2], best[3], best[4])
         # TODO: Debug add_rec
 
         json_entries = []
