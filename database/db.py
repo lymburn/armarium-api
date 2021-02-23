@@ -236,9 +236,10 @@ def filter_out_recent_outfits(closet_id: int, best_outfits: List) -> List:
     # NOTE: best_outfits = [(score, [outfit])]
     # TODO: (Opt) Incorporate score in some way. Eg. Higher score outfits can be repeated more often?
     rec_outfits = query_recommended_outfits_of_closet(closet_id)
+    # print(f"DEBUG: {rec_outfits}")
     bests = [b[1] for b in best_outfits]
     if len(rec_outfits) > 0:
-        cleaned = false
+        cleaned = False
         used_outfits = []
         n = 6
         while not cleaned:
@@ -246,7 +247,8 @@ def filter_out_recent_outfits(closet_id: int, best_outfits: List) -> List:
                 if rec['outfit'] in bests:
                     used_outfits.append(rec['outfit'])
                     bests.remove(rec['outfit'])
-            if len(used_outfits) == len(bests):
+                    # print(f"DEBUG: new bests {bests}")
+            if len(used_outfits) == len(best_outfits):
                 bests = used_outfits
                 used_outfits = []
                 rec_outfits = query_recommended_outfits_of_closet(

@@ -53,11 +53,11 @@ class Files(sqla.Model):
 class RecommendedOutfits(sqla.Model):
     __tablename__ = 'Recommended_Outfits'
     timestamp = sqla.Column('Timestamp', sqla.DateTime, primary_key=True)
-    top = sqla.Column('Top', sqla.DateTime, nullable=True)
-    bottom = sqla.Column('Bottom', sqla.DateTime, nullable=True)
-    shoes = sqla.Column('Shoes', sqla.DateTime, nullable=True)
-    bag = sqla.Column('Bag', sqla.DateTime, nullable=True)
-    accessory = sqla.Column('Accessory', sqla.DateTime, nullable=True)
+    top = sqla.Column('Top', sqla.Text, nullable=True)
+    bottom = sqla.Column('Bottom', sqla.Text, nullable=True)
+    shoes = sqla.Column('Shoes', sqla.Text, nullable=True)
+    bag = sqla.Column('Bag', sqla.Text, nullable=True)
+    accessory = sqla.Column('Accessory', sqla.Text, nullable=True)
     closet_id = sqla.Column('ClosetID', sqla.Integer, sqla.ForeignKey('Closets.ClosetID'), nullable=False)
 
     def __init__(self, closet_id, top='', bottom='', shoes='', bag='', accessory='') -> None:

@@ -77,7 +77,6 @@ class ClosetDAO:
         best = best_outfits[0]
         db.add_recommended_outfit(
             closet_id, best[0], best[1], best[2], best[3], best[4])
-        # TODO: Debug add_rec
 
         json_entries = []
         for it in best:

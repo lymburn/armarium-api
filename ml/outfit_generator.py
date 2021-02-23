@@ -11,11 +11,13 @@ import itertools
 import time
 from ml.outfit_grader import get_outfit_score
 
+
 def generate_all_combos(ls):
     # ls = [[], [], ...]
     # https://stackoverflow.com/questions/798854/all-combinations-of-a-list-of-lists
     output = list(itertools.product(*ls))
     return output
+
 
 # Path search
 def bellman_ford_search_best_path_len(graph, clothes, num):
@@ -35,13 +37,14 @@ def bellman_ford_search_best_path_len(graph, clothes, num):
     def find_best_path(src):
         # Targets = all nodes in last category
         # Find path from src to all targets then eval for best scoring outfit
-        t_outs = [] # [(length of path, [outfit])]
+        t_outs = []  # [(length of path, [outfit])]
         for t in targets:
-            length, path = nx.single_source_bellman_ford(graph, src, t) # path = [(), , ]
-            out = list(path[0]) + path[1:] # Converts path to [, ,]
+            length, path = nx.single_source_bellman_ford(
+                graph, src, t)  # path = [(), , ]
+            out = list(path[0]) + path[1:]  # Converts path to [, ,]
             t_outs.append((length, out))
-        t_outs.sort() # Ascending b/c negative scores
-        return t_outs[0][1] # []
+        t_outs.sort()  # Ascending b/c negative scores
+        return t_outs[0][1]  # []
 
     def rmv_best_path(best_path):
         # Given a list of nodes that rep a best path, rmv edges connecting these
@@ -67,22 +70,24 @@ def bellman_ford_search_best_path_len(graph, clothes, num):
 
     if small_graph:
         for s in srcs:
-            s_best = find_best_path(s) # Output: (score, [outfit items])
-            valid_outfits.append(s_best) 
+            s_best = find_best_path(s)  # Output: (score, [outfit items])
+            valid_outfits.append(s_best)
     else:
         # Repeatedly search, restoring graph aft searching a source
         for s in srcs:
             deleted_edges = []
             for _ in itertools.repeat(None, num):
                 # Given a src, find best outfit, rmv edges, repeat num times
-                s_best = find_best_path(s) # Output: (score, [outfit items])
+                s_best = find_best_path(s)  # Output: (score, [outfit items])
                 valid_outfits.append(s_best)
                 deleted_edges.append(rmv_best_path(s_best))
-            restore_deleted_edges(deleted_edges)    
+            restore_deleted_edges(deleted_edges)
 
     tok = time.perf_counter()
-    print(f"Semicombined (2 categ) directed graph path search for bests based on path length took {tok-tik:0.4f} seconds")
+    print(
+        f"Semicombined (2 categ) directed graph path search for bests based on path length took {tok-tik:0.4f} seconds")
     return valid_outfits
+
 
 # Evaluating search outputs
 def take_best_path_length_outfits(graph, outfit_list, combo=0, num=50):
@@ -90,16 +95,20 @@ def take_best_path_length_outfits(graph, outfit_list, combo=0, num=50):
     # Output [[outfit]]
     paths_outfits = []
     if combo == 3:
-        paths_outfits = [(nx.bellman_ford_path_length(graph, (out[0], out[1], out[3]), out[4]), out) for out in outfit_list]
+        paths_outfits = [(nx.bellman_ford_path_length(
+            graph, (out[0], out[1], out[3]), out[4]), out) for out in outfit_list]
     elif combo == 2:
-        paths_outfits = [(nx.bellman_ford_path_length(graph, (out[0], out[1]), out[4]), out) for out in outfit_list]
+        paths_outfits = [(nx.bellman_ford_path_length(
+            graph, (out[0], out[1]), out[4]), out) for out in outfit_list]
     else:
-        paths_outfits = [(nx.bellman_ford_path_length(graph, out[0], out[4]), out) for out in outfit_list]
-    
+        paths_outfits = [(nx.bellman_ford_path_length(
+            graph, out[0], out[4]), out) for out in outfit_list]
+
     paths_outfits.sort()
     sorted_outfits = [outfit[1] for outfit in paths_outfits]
 
     return sorted_outfits[:num]
+
 
 def score_final_outfits_in_descending(outfit_list):
     # Where outfit_list = [[outfit1 items], [outfit2 items], ...]
@@ -109,21 +118,25 @@ def score_final_outfits_in_descending(outfit_list):
     score_dict = dict()
     for outfit in outfit_list:
         score = get_outfit_score(outfit)
-        print(f"score: {score}")
+        # print(f"DEBUG: score = {score}")
+        # NOTE: It is highly unlikely for 2 outfits to have the same score,
+        # so there is no risk in overwriting
         score_dict[float(score)] = outfit
 
     sorted_list = sorted(score_dict.items(), reverse=True)
-    print(f"list {sorted_list}")
+    # print(f"DEBUG: outfit list: {sorted_list}")
+    # print(f"DEBUG: len of outfit list: {len(sorted_list)}")
 
     return sorted_list
 
+
 # clothes is a dictionary where the keys are the clothing categories
-# and the value is a list of the node names of the items 
+# and the value is a list of the node names of the items
 def get_top_outfits(graph, clothes, num=5):
     # top_imgs, bottom_imgs, and accessory_imgs are node names that are used to do optimized search
     # NOTE: Returns [(score,[keys])]
-	outfit_list = bellman_ford_search_best_path_len(graph, clothes, 2)
-	select_outfits = take_best_path_length_outfits(graph, outfit_list, combo=2) # Get best 50 outfits to score    
-	sol = score_final_outfits_in_descending(select_outfits)
-	return sol[:num]
-
+    outfit_list = bellman_ford_search_best_path_len(graph, clothes, 2)
+    select_outfits = take_best_path_length_outfits(
+        graph, outfit_list, combo=2)  # Get best 50 outfits to score
+    sol = score_final_outfits_in_descending(select_outfits)
+    return sol[:num]
