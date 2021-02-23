@@ -195,9 +195,6 @@ paths:
               base64_encoded_image:
                 type: string
                 description: Base64 encoded string of byte array of an image
-              filename:
-                type: string
-                description: File name for the image
               description:
                 type: string
                 description: User description for the image

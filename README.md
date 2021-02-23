@@ -30,6 +30,9 @@
 - Key needs to unique identify item in bucket
 - Safe characters: 0-9, a-z (+ uppercase), and some special characters (/!-_.*'())
 - Max 1024 bytes long
+- Armarium uses UUID V4 as part of object key string
+    - Using V4 not V1 to ensure higher security, since V1 is generated using MAC addr and timer
+    - Using uuid b/c it is more random and secure than the random library
 
 
 ## Working with Boto & AWS S3

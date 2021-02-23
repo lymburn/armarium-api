@@ -34,9 +34,9 @@ class ClosetDAO:
             graph = generate_empty_graph()
             buckets = aws_s3.get_buckets()
             bucket_name = buckets[0]
-            object_key = aws_s3.create_object_key(closet_name)
+            filename, object_key = aws_s3.create_object_key(closet_name)
             closet_ids = db.query_closet_id(username, closet_name)
-            db.add_file(object_key, closet_name, '',
+            db.add_file(object_key, closet_name, filename,
                         bucket_name, 'graph', closet_ids[0]['closet_id'])
             aws_s3.upload_graph(graph, bucket_name, object_key)
             return graph
