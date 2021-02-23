@@ -17,19 +17,19 @@ from storage.s3_connection import s3
 # TODO: Instead of printing errors, should raise?
 
 
-def create_object_key(filename: str) -> str:
-    # Generate 6-digit alphanumeric key + append to filename
+def create_object_key(description: str) -> str:
+    # Generate 8-digit alphanumeric key for filename
+    # Append first word in description for object key.
     # This should allow us to search for filename as a substring of object_key in Files, if needed
-    uuid_str = str(uuid.uuid4())[:8]
-    obj_key = uuid_str + '-' + filename
+    description = description.split(' ', 1)[0]
+    filename = str(uuid.uuid4())[:8]
+    obj_key = filename + '-' + description
     # print(f"DEBUG: Object key, {obj_key}")
-    return obj_key
+    return filename, obj_key
 
 
 def create_bucket_name() -> str:
     # Use uuid library uuid4() to generate 128-bit seq and take first 12 char
-    # NOTE: Using V4 not V1 to ensure higher security, since V1 is generated using MAC addr and timer
-    # NOTE: Using uuid b/c it is more random and secure than the random library
     bucket_name = ''
     while True:
         uuid_str = str(uuid.uuid4())[:12]
