@@ -141,7 +141,7 @@ def add_node_to_graph(graph, image_object_key, category, clothes):
             ag_relations = {ag:list((MEAN_TOP, MEAN_BOTTOM, MEAN_SHOES) + ag) for ag in ag_combos}
             graph = add_edges_neg_weight(graph, {**ag_relations})
     else:
-        print("invalid category")
+        print("Error: invalid category")
 
     return graph
 

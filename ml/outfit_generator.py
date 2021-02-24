@@ -125,7 +125,6 @@ def score_final_outfits_in_descending(outfit_list):
 
     sorted_list = sorted(score_dict.items(), reverse=True)
     # print(f"DEBUG: outfit list: {sorted_list}")
-    # print(f"DEBUG: len of outfit list: {len(sorted_list)}")
 
     return sorted_list
 

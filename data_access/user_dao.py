@@ -49,6 +49,7 @@ class UserDAO:
 
     def login(self, username: str, password_hash: str):
         try:
+            # NOTE: Returns a [({closet info}, [{file info}])] structure if info correct
             info_correct = db.check_user_info_correct(username, password_hash)
             res = []
 
@@ -59,7 +60,6 @@ class UserDAO:
                     for file in files:
                         img_data = aws_s3.get_image_data(file['bucket_name'], file['object_key'])
                         file['base64_encoded_image'] = img_data
-                    # NOTE: res becomes a [({closet info}, [{file info}])]
                     res.append((closet, files))
 
             return res

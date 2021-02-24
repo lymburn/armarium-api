@@ -24,7 +24,6 @@ def create_object_key(description: str) -> str:
     description = description.split(' ', 1)[0]
     filename = str(uuid.uuid4())[:8]
     obj_key = filename + '-' + description
-    # print(f"DEBUG: Object key, {obj_key}")
     return filename, obj_key
 
 
@@ -89,7 +88,7 @@ def delete_bucket(bucket_name: str) -> None:
         bucket = s3.Bucket(bucket_name)
         bucket.delete()
         bucket.wait_until_not_exists()
-        print(f"Bucket '{bucket.name}'' successfully deleted.")
+        print(f"DEBUG: Bucket '{bucket.name}'' successfully deleted.")
     except ClientError as e:
         print(
             f"ClientError, could not delete bucket. {e.response['Error']['Code']}: {e.response['Error']['Message']}")

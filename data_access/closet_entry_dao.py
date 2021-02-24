@@ -123,8 +123,8 @@ class ClosetEntryDAO:
             aws_s3.upload_graph(
                 returned_graph, graph_info['bucket_name'], graph_info['object_key'])
 
-            print(
-                f"Remove from graph, returned graph nodes: {list(returned_graph.nodes)}")
+            # print(
+            #     f"DEBUG: Remove from graph, returned graph nodes: {list(returned_graph.nodes)}")
         except Exception as error:
             raise error
 
