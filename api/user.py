@@ -77,9 +77,10 @@ def login(user):
         username = user.get('username')
         password = user.get('password')
 
-        # TODO:
-        res = user_dao.login(username, hash(password))
-        if res:
+        password_hash = hash(password)
+        res = user_dao.login(username, password_hash)
+        
+        if res is not None:
             return jsonify(account_data = res), 201
         else:
             return "User not found", 404

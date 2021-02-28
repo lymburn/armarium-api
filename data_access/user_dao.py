@@ -21,6 +21,8 @@ class UserDAO:
             username = user_model.username
             password_hash = hash(password)
 
+            print(password_hash)
+
             db.add_user(username, password_hash)
 
         except Exception as error:
@@ -38,7 +40,8 @@ class UserDAO:
                     files = db.query_all_files_from_closet(c['closet_id'])
                     object_keys = [f['object_key'] for f in files]
                     bucket = files[0]['bucket_name']
-                    deleted_items, errors = aws_s3.delete_objects(bucket, object_keys)
+                    deleted_items, errors = aws_s3.delete_objects(
+                        bucket, object_keys)
 
                 ret = db.delete_user(username)
 
@@ -51,18 +54,22 @@ class UserDAO:
         try:
             # NOTE: Returns a [({closet info}, [{file info}])] structure if info correct
             info_correct = db.check_user_info_correct(username, password_hash)
-            res = []
+            account_data = []
 
             if info_correct:
                 closets = db.query_closets_of_user(username)
+
                 for closet in closets:
                     files = db.query_all_files_from_closet(closet['closet_id'])
                     for file in files:
-                        img_data = aws_s3.get_image_data(file['bucket_name'], file['object_key'])
+                        img_data = aws_s3.get_image_data(
+                            file['bucket_name'], file['object_key'])
                         file['base64_encoded_image'] = img_data
-                    res.append((closet, files))
+                    account_data.append((closet, files))
 
-            return res
+                return account_data
+
+            return None
         except Exception as error:
             raise error
 
