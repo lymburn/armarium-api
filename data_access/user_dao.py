@@ -21,8 +21,6 @@ class UserDAO:
             username = user_model.username
             password_hash = hash(password)
 
-            print(password_hash)
-
             db.add_user(username, password_hash)
 
         except Exception as error:
@@ -52,7 +50,8 @@ class UserDAO:
 
     def login(self, username: str, password_hash: str):
         try:
-            # NOTE: Returns a [({closet info}, [{file info}])] structure if info correct
+            # NOTE: Returns {'closets': [{'closet_id': #, 'closet_name': <name>, 'items': [{'img': <data>, ...}]}]}
+            # NOTE: Does not return any graph files
             info_correct = db.check_user_info_correct(username, password_hash)
             account_data = []
 
@@ -60,14 +59,22 @@ class UserDAO:
                 closets = db.query_closets_of_user(username)
 
                 for closet in closets:
+                    closet_data = {'closet_id': closet['closet_id'],
+                                   'closet_name': closet['closet_name']}
                     files = db.query_all_files_from_closet(closet['closet_id'])
-                    for file in files:
-                        img_data = aws_s3.get_image_data(
-                            file['bucket_name'], file['object_key'])
-                        file['base64_encoded_image'] = img_data
-                    account_data.append((closet, files))
+                    file_data = []
 
-                return account_data
+                    for file in files:
+                        if file['category'] != 'graph':
+                            img_data = aws_s3.get_image_data(
+                                file['bucket_name'], file['object_key'])
+                            file['base64_encoded_image'] = img_data
+                            file_data.append(file)
+                    
+                    closet_data['items'] = file_data
+                    account_data.append(closet_data)
+
+                return {'closets': account_data}
 
             return None
         except Exception as error:
