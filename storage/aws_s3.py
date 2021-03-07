@@ -206,14 +206,25 @@ def get_image(object_key: str) -> Image:
 
 def get_image_data(bucket_name: str, object_key: str) -> str:
     try:
-        # Get b64 encoded bytes, returned in informal str representation (eg. "b'b64data'")
+        # Get b64 encoded bytes as str, returned in informal str representation (eg. "b64data")
+        img_data = str(get_object(bucket_name, object_key))
+        trimmed = img_data[2:-1]
+    except ClientError as e:
+        print(
+            f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
+    else:
+        return trimmed
+
+
+def get_image_full_str(bucket_name: str, object_key: str) -> str:
+    try:
+        # Get b64 encoded bytes, returned in informal str representation w byte-string formatting (eg. "b'b64data'")
         img_data = str(get_object(bucket_name, object_key))
     except ClientError as e:
         print(
             f"ClientError exception. {e.response['Error']['Code']}: {e.response['Error']['Message']}")
     else:
         return img_data
-    pass
 
 
 def delete_objects(bucket_name: str, object_keys: List[str]) -> Tuple[Any, Any]:
