@@ -9,8 +9,9 @@ from ml.graph_manager import add_node_to_graph, remove_node_from_graph
 class ClosetEntryDAO:
     def get_all_entries_from_closet(self, closet_id: int):
         try:
+            print("HERE1")
             entries = db.query_all_files_from_closet(closet_id)
-
+            print(entries)
             closet_entry_models = []
 
             for entry in entries:
@@ -25,7 +26,7 @@ class ClosetEntryDAO:
                 closet_entry_model = ClosetEntry(
                     base64_encoded_image, filename, description, bucket_name, object_key, category)
                 closet_entry_models.append(closet_entry_model)
-
+            print(closet_entry_models)
             return closet_entry_models
         except Exception as error:
             raise error

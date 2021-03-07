@@ -21,7 +21,7 @@ def create_closet_entry(closet_id, closet_entry):
         category = closet_entry.get("category")
 
         closet_entry_model = ClosetEntry(
-            base64_encoded_image, description, '', '', category)
+            base64_encoded_image, '', description, '', '', category)
         filename = closet_entry_dao.create_closet_entry(
             closet_id, closet_entry_model)
         return jsonify(filename=filename, description=description, base64_encoded_image=base64_encoded_image), 201
@@ -39,6 +39,7 @@ def get_closet_entries_by_closet(closet_id):
     :return:               (200) list of closet entries
     """
 
+    # TODO: Do not return graph
     try:
         closet_entries = closet_entry_dao.get_all_entries_from_closet(
             closet_id)
