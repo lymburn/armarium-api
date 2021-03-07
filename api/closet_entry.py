@@ -39,7 +39,6 @@ def get_closet_entries_by_closet(closet_id):
     :return:               (200) list of closet entries
     """
 
-    # TODO: Do not return graph
     try:
         closet_entries = closet_entry_dao.get_all_entries_from_closet(
             closet_id)
