@@ -154,7 +154,7 @@ def upload_image(b64_enc_img: str, bucket_name: str, object_key: str) -> None:
     try:
         # NOTE: Need to decode + re-encode to get a usable byte buffer b/c Swagger passes in str
         # (even if it's an encoded byte string, Python recognizes it as str and not bytes)
-        decoded_img = base64.b64decode(b64_enc_img[2:-1]) # Remove b' ' before decoding
+        decoded_img = base64.b64decode(b64_enc_img)
         bytes_data = io.BytesIO(base64.b64encode(decoded_img))
         upload_data(bytes_data, bucket_name, object_key)
     except ClientError as e:

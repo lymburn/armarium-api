@@ -216,7 +216,7 @@ paths:
         - name: closet_id
           in: path
           description: The closet's id to retrieve entries from
-          type: string
+          type: integer
           required: True
       responses:
         200:
