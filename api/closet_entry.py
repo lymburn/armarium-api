@@ -55,7 +55,7 @@ def get_closet_entries_by_closet(closet_id):
 
             json_entries.append(json_entry)
 
-        return jsonify(json_entries), 200
+        return jsonify(closetEntries = json_entries), 200
 
     except Exception as error:
         return jsonify(error=str(error)), 500
