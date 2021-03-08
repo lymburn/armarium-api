@@ -262,6 +262,37 @@ paths:
           description: Successfully retrieved best outfit
         404:
           description: Could not find best outfit
+  /closet/{closet_id}/complete-the-look:
+    post:
+      operationId: api.closet.complete_the_look
+      tags:
+        - "Closet"
+      summary: Get the complete outfit
+      description: Get the complete outfit
+      parameters:
+        - name: closet_id
+          in: path
+          description: The id of the closet the user wants outfit recommendations from
+          type: string
+          required: True
+        - name: closet_entry
+          in: body
+          description: Closet entry to add to closet
+          required: True
+          schema:
+            type: object
+            properties:
+              filename:
+                type: string
+                description: Filename for the image
+              category:
+                type: string
+                description: Clothing category
+      responses:
+        200:
+          description: Successfully retrieved best outfit
+        404:
+          description: Could not find best outfit
   
           
 

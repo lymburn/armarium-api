@@ -97,3 +97,27 @@ def get_best_outfit(closet_id):
         return jsonify(error = str(error)), 500
 
 
+def complete_the_look(closet_id, closet_entry): #incomplete_outfit):
+    """
+    """
+    try:
+        # temp (only given 1 file by user rn)
+        filename = closet_entry.get("filename")
+        category = closet_entry.get("category")
+        print(closet_id, closet_entry)
+        # Get img (meta)data from Swagger object (dict), expect smth like this:
+        incomplete_outfit = {
+            "top": [], # fill in default (all in a col) for categories not provided by usr (in closet_dao)
+            "bottom": [], # these are filenames
+            "shoe": [],
+            "bag": [],
+            "accessory": []
+        }
+        incomplete_outfit[category] = [filename]
+        print(incomplete_outfit)
+        outfit_items = closet_dao.complete_the_look(closet_id, incomplete_outfit)
+        print(outfit_items)
+
+        return jsonify(outfit = outfit_items), 200
+    except Exception as error:
+        return jsonify(error = str(error)), 500
