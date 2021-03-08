@@ -19,8 +19,8 @@ def create_closet(username, closet):
         if closet is not None:
             return "Closet with name for this user already exists", 409
         else:
-            closet_dao.create_closet(username, closet_name)
-            return "Successfully created closet", 201
+            closet_id = closet_dao.create_closet(username, closet_name)
+            return jsonify(id=closet_id), 201
 
     except Exception as error:
         return jsonify(error=str(error)), 500

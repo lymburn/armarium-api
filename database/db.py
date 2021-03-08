@@ -18,9 +18,6 @@ from database.db_orm_mapping import sqla, Users, Closets, Files, RecommendedOutf
 
 # TODO: Add try-except to catch SQLAlchemy errors
 
-# Database access functions
-
-
 def add_user(username: str, password_hash: str) -> None:
     usr = Users(username, password_hash)
     add_persist(usr)

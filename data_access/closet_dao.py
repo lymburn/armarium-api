@@ -25,7 +25,10 @@ class ClosetDAO:
     def create_closet(self, username: str, closet_name: str):
         try:
             db.add_closet(closet_name, username)
+            closets = db.query_closet_id(username, closet_name)
             self.create_closet_graph(username, closet_name)
+
+            return closets[0]['closet_id']
         except Exception as error:
             raise error
 
@@ -39,7 +42,7 @@ class ClosetDAO:
             db.add_file(object_key, closet_name, filename,
                         bucket_name, 'graph', closet_ids[0]['closet_id'])
             aws_s3.upload_graph(graph, bucket_name, object_key)
-            return graph
+            # return graph
         except Exception as error:
             raise error
 
