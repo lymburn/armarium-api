@@ -72,7 +72,7 @@ def get_img_tensor_from_outfit(outfit):
     img_dict = {
         "top": outfit_imgs[0],
         "bottom": outfit_imgs[1],
-        "shoe": outfit_imgs[2],
+        "shoes": outfit_imgs[2],
         "bag": outfit_imgs[3],
         "accessory": outfit_imgs[4]
     }

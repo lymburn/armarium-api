@@ -4,7 +4,7 @@ import database.db as db
 import storage.aws_s3 as aws_s3
 from ml.outfit_generator import get_top_outfits
 from ml.graph_manager import generate_empty_graph
-from ml.complete_the_look import wrapper
+from ml.complete_the_look import get_complete_the_look_outfit
 
 
 class ClosetDAO:
@@ -98,23 +98,22 @@ class ClosetDAO:
 
 
     def complete_the_look(self, closet_id: int, incomplete_outfit):
-        # TODO: get keys correp to filenames
-        # TODO: print everything + debug
         files = db.query_all_files_from_closet_grouped_by_category(closet_id)
-        for k, v in incomplete_outfit:
+        filtered_outfit_items = {}
+        for k, v in incomplete_outfit.items():
             if len(v) == 0:
-                incomplete_outfit[k] = [f['object_key'] for f in files[k]]
+                filtered_outfit_items[k] = [f['object_key'] for f in files[k]]
             else:
                 file_info = db.query_file_key(closet_id, v[0])
-                incomplete_outfit[k] = [file_info[0]['object_key']]
-        print(incomplete_outfit)
+                filtered_outfit_items[k] = [file_info[0]['object_key']]
+
         g_info = db.query_graph_key(closet_id)
         graph = aws_s3.get_graph(g_info['bucket_name'], g_info['object_key'])
 
-        outfit = wrapper(graph, incomplete_outfit)
-        print(outfit)
+        ctl_outfit_info = get_complete_the_look_outfit(graph, filtered_outfit_items)
 
         json_entries = []
+        outfit = ctl_outfit_info[0][1] # Extract list of outfit items from [(score, [items])]
         for it in outfit:
             info = db.query_file_info(it)
             data = aws_s3.get_image_data(

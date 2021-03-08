@@ -92,32 +92,37 @@ def get_best_outfit(closet_id):
     """
     try:
         outfit_items = closet_dao.recommend_outfit(closet_id)
-        return jsonify(outfit = outfit_items), 200
+        return jsonify(outfit=outfit_items), 200
     except Exception as error:
-        return jsonify(error = str(error)), 500
+        return jsonify(error=str(error)), 500
 
 
-def complete_the_look(closet_id, closet_entry): #incomplete_outfit):
+def complete_the_look(closet_id, closet_entry):  # incomplete_outfit):
     """
+    This function corresponds to a POST request for /api/closet/{closet_id}/complete-the-look
+    with a recommended outfit being returned
+
+    :param closet_id:   id of the closet the user wants recommendations from
+    :param ...:         item(s) specified by user
+    :return:            (200) data and metadata of outfit recommended to user
     """
     try:
-        # temp (only given 1 file by user rn)
+        # NOTE: Temp implementation = only given 1 file by user
         filename = closet_entry.get("filename")
         category = closet_entry.get("category")
-        print(closet_id, closet_entry)
-        # Get img (meta)data from Swagger object (dict), expect smth like this:
+
+        # TODO: Edit Swagger so that app can pass us dict w format like incomplete_outfit,
+        # NOTE: incomplete_outfit = dict containing list of filenames, filenames converted to obj_keys later
         incomplete_outfit = {
-            "top": [], # fill in default (all in a col) for categories not provided by usr (in closet_dao)
-            "bottom": [], # these are filenames
-            "shoe": [],
+            "top": [],
+            "bottom": [],
+            "shoes": [],
             "bag": [],
             "accessory": []
         }
         incomplete_outfit[category] = [filename]
-        print(incomplete_outfit)
-        outfit_items = closet_dao.complete_the_look(closet_id, incomplete_outfit)
-        print(outfit_items)
-
-        return jsonify(outfit = outfit_items), 200
+        outfit_items = closet_dao.complete_the_look(
+            closet_id, incomplete_outfit)
+        return jsonify(outfit=outfit_items), 200
     except Exception as error:
-        return jsonify(error = str(error)), 500
+        return jsonify(error=str(error)), 500

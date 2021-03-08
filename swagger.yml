@@ -267,8 +267,8 @@ paths:
       operationId: api.closet.complete_the_look
       tags:
         - "Closet"
-      summary: Get the complete outfit
-      description: Get the complete outfit
+      summary: Get a recommended outfit given user specified file(s)
+      description: Get a recommended outfit given user specified file(s)
       parameters:
         - name: closet_id
           in: path
