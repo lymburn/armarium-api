@@ -21,6 +21,7 @@ MEAN_ACCESSORY = "ml/accessory.png"
 # Graph generation helper functions
 def generate_all_combos(ls):
     # ls = [[], [], ...]
+    # output = [()]
     # https://stackoverflow.com/questions/798854/all-combinations-of-a-list-of-lists
     output = list(itertools.product(*ls))
     return output
