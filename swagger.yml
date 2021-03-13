@@ -275,19 +275,37 @@ paths:
           description: The id of the closet the user wants outfit recommendations from
           type: string
           required: True
-        - name: closet_entry
+        - name: closet_entries
           in: body
           description: Closet entry to add to closet
           required: True
           schema:
             type: object
             properties:
-              filename:
+              item_1_filename:
                 type: string
-                description: Filename for the image
-              category:
+                description: Filename for the image 1
+              item_1_category:
                 type: string
-                description: Clothing category
+                description: Clothing category for image 1
+              item_2_filename:
+                type: string
+                description: Filename for the image 2
+              item_2_category:
+                type: string
+                description: Clothing category for image 2
+              item_3_filename:
+                type: string
+                description: Filename for the image 3
+              item_3_category:
+                type: string
+                description: Clothing category for image 3
+              item_4_filename:
+                type: string
+                description: Filename for the image 4
+              item_4_category:
+                type: string
+                description: Clothing category for image 4
       responses:
         200:
           description: Successfully retrieved best outfit

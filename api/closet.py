@@ -92,12 +92,14 @@ def get_best_outfit(closet_id):
     """
     try:
         outfit_items = closet_dao.recommend_outfit(closet_id)
+        if len(outfit_items) == 0:
+            return "Not enough items in closet", 400
         return jsonify(outfit=outfit_items), 200
     except Exception as error:
         return jsonify(error=str(error)), 500
 
 
-def complete_the_look(closet_id, closet_entry):  # incomplete_outfit):
+def complete_the_look(closet_id, closet_entries):
     """
     This function corresponds to a POST request for /api/closet/{closet_id}/complete-the-look
     with a recommended outfit being returned
@@ -107,12 +109,8 @@ def complete_the_look(closet_id, closet_entry):  # incomplete_outfit):
     :return:            (200) data and metadata of outfit recommended to user
     """
     try:
-        # NOTE: Temp implementation = only given 1 file by user
-        filename = closet_entry.get("filename")
-        category = closet_entry.get("category")
-
-        # TODO: Edit Swagger so that app can pass us dict w format like incomplete_outfit,
-        # NOTE: incomplete_outfit = dict containing list of filenames, filenames converted to obj_keys later
+        # NOTE: incomplete_outfit = dict containing list of filenames, 
+        # filenames converted to obj_keys later
         incomplete_outfit = {
             "top": [],
             "bottom": [],
@@ -120,9 +118,25 @@ def complete_the_look(closet_id, closet_entry):  # incomplete_outfit):
             "bag": [],
             "accessory": []
         }
-        incomplete_outfit[category] = [filename]
+
+        for i in range(1, 5):
+            f = 'item_' + str(i) + '_filename'
+            c = 'item_' + str(i) + '_category'
+            filename = closet_entries.get(f)
+            category = closet_entries.get(c)
+
+            if filename != '' and category != '':
+                if len(incomplete_outfit[category]) != 0:
+                    return "Only 1 item per category allowed", 400
+                incomplete_outfit[category].append(filename)
+
+        print(f"DEBUG: Complete the look input: {incomplete_outfit}")
+
         outfit_items = closet_dao.complete_the_look(
             closet_id, incomplete_outfit)
+
+        if len(outfit_items) == 0:
+            return "Not enough items in closet", 400
         return jsonify(outfit=outfit_items), 200
     except Exception as error:
         return jsonify(error=str(error)), 500

@@ -63,6 +63,9 @@ class ClosetDAO:
     def recommend_outfit(self, closet_id: int):
         # Fetch graph from S3 + create ML algorithm inputs
         files = db.query_all_files_from_closet_grouped_by_category(closet_id)
+        if len(files.keys()) < 6:
+            return []
+
         clothes = {'top': [f['object_key'] for f in files['top']],
                    'bottom': [f['object_key'] for f in files['bottom']],
                    'shoes': [f['object_key'] for f in files['shoes']],
@@ -96,9 +99,11 @@ class ClosetDAO:
 
         return json_entries
 
-
     def complete_the_look(self, closet_id: int, incomplete_outfit):
         files = db.query_all_files_from_closet_grouped_by_category(closet_id)
+        if len(files.keys()) < 6:
+            return []
+
         filtered_outfit_items = {}
         for k, v in incomplete_outfit.items():
             if len(v) == 0:
@@ -110,10 +115,12 @@ class ClosetDAO:
         g_info = db.query_graph_key(closet_id)
         graph = aws_s3.get_graph(g_info['bucket_name'], g_info['object_key'])
 
-        ctl_outfit_info = get_complete_the_look_outfit(graph, filtered_outfit_items)
+        ctl_outfit_info = get_complete_the_look_outfit(
+            graph, filtered_outfit_items)
 
         json_entries = []
-        outfit = ctl_outfit_info[0][1] # Extract list of outfit items from [(score, [items])]
+        # Extract list of outfit items from [(score, [items])]
+        outfit = ctl_outfit_info[0][1]
         for it in outfit:
             info = db.query_file_info(it)
             data = aws_s3.get_image_data(
@@ -126,7 +133,6 @@ class ClosetDAO:
                                  "category": info['category']})
 
         return json_entries
-
 
 
 closet_dao = ClosetDAO()

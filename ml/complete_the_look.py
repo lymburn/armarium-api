@@ -4,7 +4,7 @@ import ml.graph_manager as gm
 from ml.outfit_generator import get_top_outfits
 
 
-def generate_subgraph_edges(filtered_outfit_items):
+def generate_subgraph_nodes(filtered_outfit_items):
     # Get list containing all pairs of nodes we wish to connect with an edge
     # Return [(node1, node2)], where we want an edge connecting node1 to node2
     all_combos = []
@@ -28,7 +28,7 @@ def generate_subgraph_edges(filtered_outfit_items):
 def generate_subgraph(original_graph, filtered_outfit_items):
     # Graph structure: (tb) --> s --> g --> a
     it_graph = nx.DiGraph()
-    all_combos = generate_subgraph_edges(filtered_outfit_items)
+    all_combos = generate_subgraph_nodes(filtered_outfit_items)
     
     for tup in all_combos:
         edge_weight = original_graph[tup[0]][tup[1]]["weight"]
