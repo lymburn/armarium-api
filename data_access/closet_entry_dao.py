@@ -25,7 +25,7 @@ class ClosetEntryDAO:
                     closet_entry_model = ClosetEntry(
                         base64_encoded_image, filename, description, bucket_name, object_key, category)
                     closet_entry_models.append(closet_entry_model)
-            
+
             return closet_entry_models
         except Exception as error:
             raise error
@@ -61,7 +61,9 @@ class ClosetEntryDAO:
                               closet_entry_model.base64_encoded_image)
             self.add_item_to_closet_graph(closet_id, object_key, category)
 
-            return filename
+            file_info = {'base64_encoded_image': closet_entry_model.base64_encoded_image, 'bucket_name': bucket_name,
+                         'category': category, 'closet_id': closet_id, 'description': description, 'filename': filename, 'object_key': object_key}
+            return file_info
         except Exception as error:
             raise error
 

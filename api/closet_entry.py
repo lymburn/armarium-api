@@ -22,9 +22,9 @@ def create_closet_entry(closet_id, closet_entry):
 
         closet_entry_model = ClosetEntry(
             base64_encoded_image, '', description, '', '', category)
-        filename = closet_entry_dao.create_closet_entry(
+        file_info = closet_entry_dao.create_closet_entry(
             closet_id, closet_entry_model)
-        return jsonify(filename=filename, description=description, base64_encoded_image=base64_encoded_image), 201
+        return jsonify(closet_entry=file_info), 201
 
     except Exception as error:
         return jsonify(error=str(error)), 500
@@ -55,7 +55,7 @@ def get_closet_entries_by_closet(closet_id):
 
             json_entries.append(json_entry)
 
-        return jsonify(closetEntries = json_entries), 200
+        return jsonify(closet_entries=json_entries), 200
 
     except Exception as error:
         return jsonify(error=str(error)), 500
