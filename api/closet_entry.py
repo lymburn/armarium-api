@@ -2,6 +2,7 @@ from flask import jsonify, make_response
 import json as json
 from model.closet_entry_model import ClosetEntry
 from data_access.closet_entry_dao import closet_entry_dao
+import time
 
 
 def create_closet_entry(closet_id, closet_entry):
@@ -16,6 +17,7 @@ def create_closet_entry(closet_id, closet_entry):
 
     try:
         # Get file data. Bucket + key info will be added in DAO
+        tik = time.perf_counter()
         base64_encoded_image = closet_entry.get("base64_encoded_image")
         description = closet_entry.get("description")
         category = closet_entry.get("category")
@@ -24,6 +26,8 @@ def create_closet_entry(closet_id, closet_entry):
             base64_encoded_image, '', description, '', '', category)
         file_info = closet_entry_dao.create_closet_entry(
             closet_id, closet_entry_model)
+        tok = time.perf_counter()
+        print(f"{tok-tik:0.4f} seconds")
         return jsonify(closet_entry=file_info), 201
 
     except Exception as error:

@@ -10,6 +10,8 @@ import networkx as nx
 import itertools
 from ml.outfit_grader import get_outfit_score
 import matplotlib.pyplot as plt
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, Future
 
 # path to mean images
 MEAN_TOP = "ml/upper.png"
@@ -28,8 +30,27 @@ def generate_all_combos(ls):
 
 def add_edges_neg_weight(it_graph, relations):
     # given {(categA, categB):[outfit], ...}, add_edge(categA, categB, weight = score(outfit))
+
+    # for k, v in relations.items():
+    #     it_graph.add_edge(k[0], k[1], weight=-1*get_outfit_score(v))
+    # return it_graph
+
+    executor = ThreadPoolExecutor(max_workers=4)
+    futures = []
+    fs = []
+    results = []
     for k, v in relations.items():
-        it_graph.add_edge(k[0], k[1], weight=-1*get_outfit_score(v))
+        f = executor.submit(get_outfit_score, v)
+        futures.append((k[0], k[1], f)) # executor.submit(evaluate_one_outfit, v)))
+        fs.append(f)
+#     for fut in futures:
+#         r = fut[2].result()
+#         results.append((fut[0], fut[1], -1*r))
+    done, not_done = concurrent.futures.wait(fs)
+    results = [(d[0], d[1], -1*d[2].result()) for d in futures]
+    
+    for res in results:
+        it_graph.add_edge(res[0], res[1], weight=res[2])
     return it_graph
 
 def generate_graph_edges(top_imgs, bottom_imgs, shoes_imgs, bag_imgs, accessory_imgs):
