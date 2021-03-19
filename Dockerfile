@@ -8,6 +8,7 @@ COPY api /src/api
 COPY model /src/model
 COPY ml /src/ml
 COPY database /src/database
+COPY storage /src/storage
 COPY data_access /src/data_access
 COPY swagger.yml /src
 CMD python /src/app.py

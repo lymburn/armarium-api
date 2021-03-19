@@ -119,7 +119,7 @@ def complete_the_look(closet_id, closet_entries):
             "accessory": []
         }
 
-        for i in range(1, 5):
+        for i in range(1, 6):
             f = 'item_' + str(i) + '_filename'
             c = 'item_' + str(i) + '_category'
             filename = closet_entries.get(f)
@@ -129,6 +129,11 @@ def complete_the_look(closet_id, closet_entries):
                 if len(incomplete_outfit[category]) != 0:
                     return "Only 1 item per category allowed", 400
                 incomplete_outfit[category].append(filename)
+
+        if len(set([len(items) for items in incomplete_outfit.values()])) == 1:
+            # TODO: More pythonic way to check?
+            # If no items or if full outfit was given
+            return "Bad request. Incorrect format", 400
 
         print(f"DEBUG: Complete the look input: {incomplete_outfit}")
 

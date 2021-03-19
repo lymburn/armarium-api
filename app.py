@@ -19,10 +19,11 @@ def before_first_request():
 def clean_up():
     with app.app.app_context():
         sqla.drop_all()
-    
+
     buckets = aws_s3.get_buckets()
     for b in buckets:
         aws_s3.empty_and_delete_bucket(b)
+
 
 if __name__ == '__main__':
     # Database set up
