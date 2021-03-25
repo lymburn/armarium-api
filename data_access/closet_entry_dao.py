@@ -45,6 +45,16 @@ class ClosetEntryDAO:
         except Exception as error:
             raise error
 
+    def check_closet_size(self, closet_id: int, category: str):
+        try:
+            files = db.query_all_files_from_closet_category(closet_id, category)
+            if len(files) < 10:
+                return True
+            else:
+                return False
+        except Exception as error:
+            raise error
+
     def create_closet_entry(self, closet_id: int, closet_entry_model: ClosetEntry):
         try:
             description = closet_entry_model.description

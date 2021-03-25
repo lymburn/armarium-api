@@ -22,6 +22,11 @@ def create_closet_entry(closet_id, closet_entry):
 
         closet_entry_model = ClosetEntry(
             base64_encoded_image, '', description, '', '', category)
+
+        allowed = closet_entry_dao.check_closet_size(closet_id, category)
+        if not allowed:
+            return "Too many items in this category", 400
+        
         file_info = closet_entry_dao.create_closet_entry(
             closet_id, closet_entry_model)
         return jsonify(closet_entry=file_info), 201
