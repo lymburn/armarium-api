@@ -98,10 +98,10 @@ def delete_all_files_in_closet_category(closet_id: int, category: str) -> bool:
         return False
 
 
-def delete_all_recommended_outfits_with_file(closet_id: int, filename: str) -> None:
+def delete_all_recommended_outfits_with_file(closet_id: int, object_key: str) -> None:
     outfits = sqla.session.query(RecommendedOutfits) \
         .filter(RecommendedOutfits.closet_id == closet_id) \
-        .filter(or_(RecommendedOutfits.top == filename, RecommendedOutfits.bottom == filename, RecommendedOutfits.shoes == filename, RecommendedOutfits.bag == filename, RecommendedOutfits.accessory == filename))
+        .filter(or_(RecommendedOutfits.top == object_key, RecommendedOutfits.bottom == object_key, RecommendedOutfits.shoes == object_key, RecommendedOutfits.bag == object_key, RecommendedOutfits.accessory == object_key))
     if outfits:
         for out in outfits:
             delete_persist(out)

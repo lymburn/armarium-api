@@ -2,6 +2,7 @@ from flask import jsonify, make_response
 import json as json
 from model.closet_entry_model import ClosetEntry
 from data_access.closet_entry_dao import closet_entry_dao
+import time
 
 
 def create_closet_entry(closet_id, closet_entry):
@@ -66,20 +67,20 @@ def get_closet_entries_by_closet(closet_id):
         return jsonify(error=str(error)), 500
 
 
-def delete_closet_entry(closet_id, closet_entry):
+def delete_closet_entry(closet_id, filename):
     """
-    This function corresponds to a DELETE request for /api/closet/{closet-id}/closet-entry/{closet-entry}
+    This function corresponds to a DELETE request for /api/closet/{closet_id}/closet-entry/{filename}
 
     :param closet_id:      id of the closet to delete from
-    :param closet_entry:   filename of closet entry to delete
-    :return:                201 on success, 404 if entry with object key does not exist
+    :param filename:       filename of closet entry to delete
+    :return:               201 on success, 404 if entry with object key does not exist
     """
     try:
         exist = closet_entry_dao.does_filename_exists_in_closet(
-            closet_id, closet_entry)
+            closet_id, filename)
 
         if exist:
-            closet_entry_dao.delete_closet_entry(closet_id, closet_entry)
+            closet_entry_dao.delete_closet_entry(closet_id, filename)
             return "Successfully deleted closet entry", 201
         else:
             return "File not found", 404

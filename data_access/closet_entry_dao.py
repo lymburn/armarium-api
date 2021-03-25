@@ -1,3 +1,4 @@
+from typing import Dict
 from model.closet_entry_model import ClosetEntry
 import database.db as db
 import storage.aws_s3 as aws_s3
@@ -111,27 +112,27 @@ class ClosetEntryDAO:
     def delete_closet_entry(self, closet_id: int, filename: str):
         try:
             files = db.query_file_key(closet_id, filename)
+            file_info = files[0]
             if len(files) > 0:
-                self.remove_item_from_closet_graph(closet_id, filename)
+                self.remove_item_from_closet_graph(closet_id, file_info)
                 aws_s3.delete_object(
-                    files[0]['bucket_name'], files[0]['object_key'])
+                    file_info['bucket_name'], file_info['object_key'])
                 db.delete_all_recommended_outfits_with_file(
-                    closet_id, filename)
-                db.delete_file(files[0]['object_key'])
+                    closet_id, file_info['object_key'])
+                db.delete_file(file_info['object_key'])
         except Exception as error:
             raise error
 
-    def remove_item_from_closet_graph(self, closet_id: int, filename: str):
+    def remove_item_from_closet_graph(self, closet_id: int, file_info: Dict):
         try:
             # Get graph from S3 + file info from database
             graph_info = db.query_graph_key(closet_id)
             graph = aws_s3.get_graph(
                 graph_info['bucket_name'], graph_info['object_key'])
-            files = db.query_file_key(closet_id, filename)
 
             # Edit graph + overwrite in S3
             returned_graph = remove_node_from_graph(
-                graph, files[0]['object_key'], files[0]['category'])
+                graph, file_info['object_key'], file_info['category'])
             aws_s3.upload_graph(
                 returned_graph, graph_info['bucket_name'], graph_info['object_key'])
 

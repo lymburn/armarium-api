@@ -221,7 +221,7 @@ paths:
       responses:
         200:
           description: Successfully retrieved closet entries
-  /closet/{closet_id}/closet-entry/{closet_entry}/:
+  /closet/{closet_id}/closet-entry/{filename}/:
     delete:
       operationId: api.closet_entry.delete_closet_entry
       tags:
@@ -232,11 +232,11 @@ paths:
         - name: closet_id
           in: path
           description: The id of the closet the file is in
-          type: string
+          type: integer
           required: True
-        - name: closet_entry
+        - name: filename
           in: path
-          description: Filename of the closet entry
+          description: Closet entry filename
           type: string
           required: True
       responses:

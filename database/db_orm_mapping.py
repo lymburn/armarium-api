@@ -61,7 +61,6 @@ class RecommendedOutfits(sqla.Model):
     closet_id = sqla.Column('ClosetID', sqla.Integer, sqla.ForeignKey('Closets.ClosetID'), nullable=False)
 
     def __init__(self, closet_id, top='', bottom='', shoes='', bag='', accessory='') -> None:
-        # TODO: Find out how to autogenerate timestamp, if poss. Tried a couple things but they haven't worked so far.
         self.timestamp = datetime.datetime.today()
         self.top = top
         self.bottom = bottom

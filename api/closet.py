@@ -1,6 +1,7 @@
 from flask import jsonify
 from data_access.closet_dao import closet_dao
 from model.closet_model import Closet
+import time
 
 
 def create_closet(username, closet):
@@ -52,7 +53,7 @@ def get_closet(username, closet_name):
 
         if closet is not None:
             return jsonify(id=closet.closet_id,
-                           name=closet.closet_name)
+                           name=closet.closet_name), 200
         else:
             return 'Closet Not Found', 404
     except Exception as error:
@@ -75,7 +76,7 @@ def delete_closet(username, closet_name):
         if closet is not None:
             closet_dao.delete_closet(closet)
             return jsonify(id=closet.closet_id,
-                           name=closet.closet_name)
+                           name=closet.closet_name), 200
         else:
             return 'Closet Not Found', 404
     except Exception as error:
@@ -92,6 +93,7 @@ def get_best_outfit(closet_id):
     """
     try:
         outfit_items = closet_dao.recommend_outfit(closet_id)
+
         if len(outfit_items) == 0:
             return "Not enough items in closet", 400
         return jsonify(outfit=outfit_items), 200

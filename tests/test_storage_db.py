@@ -13,6 +13,8 @@ def test_aws_img_read_write():
     aws_s3.upload_image(upload_str, bucket_name, "test-small-img")
     image_data = aws_s3.get_image_data(bucket_name, "test-small-img")
     assert upload_str == image_data, "Data strings not equal"
+    print(
+        f"Successful upload and download for smallest image size: {upload_str == image_data}")
 
     # Near largest size of 4k
     with open("test_files/large_img.jpg", "rb") as image_file:
@@ -22,6 +24,7 @@ def test_aws_img_read_write():
     aws_s3.upload_image(upload_str, bucket_name, "test-large-img")
     image_data = aws_s3.get_image_data(bucket_name, "test-large-img")
     assert upload_str == image_data, "Data strings not equal"
-
+    print(
+        f"Successful upload and download for largest image size: {upload_str == image_data}")
 
     aws_s3.empty_and_delete_bucket(bucket_name)
